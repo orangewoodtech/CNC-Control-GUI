@@ -2,7 +2,7 @@ from tkinter import *
 from tkinter import filedialog
 from tkinter import ttk
 global value
-
+global i
 ########### Functions #################
 
 def colorChange():
@@ -10,9 +10,15 @@ def colorChange():
     Connectbutton.configure(bg = "red")
 
 def xpos():
-    print("Moving in X+")
+
+    #print("Moving in X+")
     value = entrybox.get()
-    print("G00 X" + value)
+    #print("G00 X" + value)
+    
+    #debugSec.delete('1.0', END)
+    astring="Moving in X+ \nGOO X"
+    debugSec.insert(INSERT, astring + value + "\n")
+	
 def xneg():
     print("Moving in X-")
     value = entrybox.get()
@@ -283,11 +289,11 @@ boundingbox=w.create_rectangle(25, 25, xmax-xmin+25, ymax-ymin+25, fill = 'red')
 w.tag_raise(boundingbox)
 
 ############### Debugger Box ####################
-'''
-debugSec=Text(window, width=80, height=31)
-debugSec.insert(1.0, "Debugger>>")
+
+debugSec=Text(window, width=80, height=31, fg="red")
+debugSec.insert(1.0, "Debugger>>\n")
 debugSec.grid(row=1, column=200, rowspan=8)
-'''
+
 
 
 window.mainloop()
