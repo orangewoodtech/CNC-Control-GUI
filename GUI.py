@@ -1,8 +1,11 @@
 from tkinter import *
 from tkinter import filedialog
 from tkinter import ttk
+import math
+from numpy import *
 global value
-global i
+global i, xMin, xMax, yMax, yMin, xmin, xmax, ymin, ymax
+
 ########### Functions #################
 
 def colorChange():
@@ -20,47 +23,57 @@ def xpos():
     debugSec.insert(INSERT, astring + value + "\n")
 	
 def xneg():
-    print("Moving in X-")
     value = entrybox.get()
-    print("G00 X-" + value)
+    astring="Moving in X- \nGOO X-"
+    debugSec.insert(INSERT, astring + value + "\n")
 
 def ypos():
-    print("Moving in Y+")
     value = entrybox.get()
-    print("G00 Y" + value)
+    astring="Moving in Y \nGOO Y"
+    debugSec.insert(INSERT, astring + value + "\n")
+	
 def yneg():
-    print("Moving in Y-")
     value = entrybox.get()
-    print("G00 Y-" + value)
+    astring="Moving in Y- \nGOO Y-"
+    debugSec.insert(INSERT, astring + value + "\n")
 
 def zpos():
-    print("Moving in Z+")
     value = entrybox.get()
-    print("G00 Z" + value)
+    astring="Moving in Z \nGOO Z"
+    debugSec.insert(INSERT, astring + value + "\n")
+	
 def zneg():
-    print("Moving in Z-")
     value = entrybox.get()
-    print("G00 Z-" + value)
-
+    astring="Moving in Z- \nGOO Z-"
+    debugSec.insert(INSERT, astring + value + "\n")
+	
 def home():
     print("Moving to Home")
 
 def diag1():
-    print("Moving diagonally 1")
+    #print("Moving diagonally 1")
     value = entrybox.get()
-    print("G00 X-"+value+" Y"+value)
+    astring1="Moving diagonally 1 \nGOO X-"
+    astring2=" Y"
+    debugSec.insert(INSERT, astring1 + value + astring2 + value + "\n")
+	
 def diag2():
-    print("Moving diagonally 2")
     value = entrybox.get()
-    print("G00 X"+value+" Y"+value)
+    astring1="Moving diagonally 2 \nGOO X"
+    astring2=" Y"
+    debugSec.insert(INSERT, astring1 + value + astring2 + value + "\n")
+	
 def diag3():
-    print("Moving diagonally 3")
     value = entrybox.get()
-    print("G00 X-"+value+" Y-"+value)
+    astring1="Moving diagonally 3 \nGOO X-"
+    astring2=" Y-"
+    debugSec.insert(INSERT, astring1 + value + astring2 + value + "\n")
+	
 def diag4():
-    print("Moving diagonally 4")
     value = entrybox.get()
-    print("G00 X"+value+" Y-"+value)
+    astring1="Moving diagonally 3 \nGOO X"
+    astring2=" Y-"
+    debugSec.insert(INSERT, astring1 + value + astring2 + value + "\n")
 
 def increment():
 	value=int(entrybox.get())
@@ -95,30 +108,163 @@ def Scale():
 def UploadAction(event=None):                             # Import File is getting selected and needs to be saved on RaspberryPi
     filename = filedialog.askopenfilename()
     print('Selected:', filename)
+
+def findMinMax(x1, x2, y1, y2, xc, yc,direction):
+    # xMin, yMin, xMax, yMax
+    # compute radius of circle
+    radius = double(math.sqrt(pow((xc - x1), 2) + pow((yc - y1), 2)))
+
+    # c(x1, x2, y1, y2, xc, yc):compute starting and ending points in polar coordinates
+    # atan2 function is used so as to get the full range of the theta calculated .
+
+    t1 = math.atan2((y1-yc) , (x1-xc))
+    t2 = math.atan2((y2 - yc), (x2 - xc))
+
+    # determine starting and ending polar angles
+
+    if direction == 0:
+        if (t1 < t2):
+            tStart = t1
+            tEnd = t2
+        else:
+            tStart = t2
+            tEnd = t1
+
+        delta = 0.01
+
+        xMin = xc + radius * cos(tStart)
+        yMin = yc + radius * sin(tStart)
+        xMax = xMin
+        yMax = yMin
+
+        theta = tStart
+
+        while theta < tEnd:
+            # compute coordinates
+            x = xc + radius * cos(theta)
+            y = yc + radius * sin(theta)
+
+            if (x > xMax):
+                xMax = x
+            if (x < xMin):
+                xMin = x
+            if (y > yMax):
+                yMax = y
+            if (y < yMin):
+                yMin = y
+
+            theta = theta + delta
+
+
+    elif direction == 1:
+        if (t1 < t2):
+            tStart = t2
+            tEnd = t1
+        else:
+            tStart = t1
+            tEnd = t2
+        delta = 0.01
+
+        xMin = xc + radius * cos(tStart)
+        yMin = yc + radius * sin(tStart)
+        xMax = xMin
+        yMax = yMin
+
+        theta = tStart
+        tEnd = tEnd + 6.283
+
+        while theta <= tEnd:
+            # compute coordinates
+            x = xc + radius * cos(theta)
+            y = yc + radius * sin(theta)
+
+            if (x > xMax):
+                xMax = x
+            if (x < xMin):
+                xMin = x
+            if (y > yMax):
+                yMax = y
+            if (y < yMin):
+                #print("yMin has now been changed at X: " + str(x) + " Y: " + str(y))
+                yMin = y
+
+            theta = theta + delta
+    
+    #print("findMinMax function values: xMax= {0}, xMin= {1}, yMax= {2}, yMin= {3}".format(xMax, xMin, yMax, yMin))
+    # now scan the polar space at fixed radius and find the minimum AND maximum Cartesian x and y values
+    # print ("cos of " + str(tStart) + " is : " + str(round(cos(tStart))))
+    # initialize min and max coordinates to first point
+
+    # display min and max values
+    #print("xMin = " + str(xMin) + " yMin = " + str(yMin))
+    #print("xMax = " + str(xMax) + " yMax = " + str(yMax))
+    return xMin,yMin,xMax, yMax 
 	
-xmin, xmax, ymin, ymax, valx, valy= 99999.0,0.0,99999.0,0.0,0.0,0.0
+#findMinMax(-1/1.41, 1/1.41, 1/1.41, -1/1.41, 0, 0,0)
+
+xmin,xmax,ymin,ymax, valxprev,valyprev,valxnew,valynew, vali,valj, xMin,xMax,yMin,yMax, flag= 99999.0,0.0,99999.0,0.0, 0.0,0.0,0.0,0.0, 0.0,0.0, 99999.0,0.0,99999.0,0.0, 0   
 x=''
 y=''
-with open('GCode2.txt','r') as f:
+i=''
+j=''
+g=''
+with open('GCode4.txt','r') as f:
  for line in f.readlines():
   for word in line.split():
+   if(word[0]== "G"):
+    g=word[1]
+    valg=float(g)
+    #print(valg)
+    if(valg==2):
+     flag=0
+    elif(valg==3):
+     flag=1
+   valxprev= valxnew
+   valyprev= valynew
    if(word[0] == "X"):
     x=word[1:]
-    valx=float(x)
-    if(valx>xmax):
-     xmax=valx
-    if(valx<xmin):
-     xmin=valx
+    valxnew=float(x)
+    if(valxnew>xmax):
+     xmax=valxnew
+    if(valxnew<xmin):
+     xmin=valxnew
 
     #print(x)
    if(word[0] == "Y"):
     y=word[1:]
-    valy=float(y)
-    if(valy>ymax):
-     ymax=valy
-    if(valy<ymin):
-     ymin=valy
+    valynew=float(y)
+    if(valynew>ymax):
+     ymax=valynew
+    if(valynew<ymin):
+     ymin=valynew
     #print(y)
+	
+   if(word[0]== "I"):
+    i=word[1:]
+    vali=float(i)
+    #print(vali)
+   if(word[0]== "J"):
+    j=word[1:]
+    valj=float(j)
+    #print(valj)
+   
+  xMin,yMin,xMax,yMax=findMinMax(valxprev ,valxnew, valyprev, valynew, valxprev+vali, valyprev+valj, flag)
+  xMin=float(xMin)
+  xMax=float(xMax)
+  yMin=float(yMin)
+  yMax=float(yMax)
+print("xmax={0}, xMax={1} \n".format(xmax, xMax))
+print("xmin={0}, xMin={1} \n".format(xmin, xMin))
+print("ymax={0}, yMax={1} \n".format(ymax, yMax))
+print("ymin={0}, yMin={1} \n".format(ymin, yMin))	
+if(xmax<xMax):
+ xmax=xMax
+if(xmin>xMin):
+ xmin= xMin
+if(ymax<yMax):
+ ymax=yMax
+if(ymin>yMin):
+ ymin=yMin
 print(xmax)
 print(xmin)
 print(ymax)
@@ -131,6 +277,12 @@ def checkered(canvas, line_distance):
    # horizontal lines at an interval of "line_distance" pixel
    for y in range(line_distance,rectangle_height,line_distance):
       w.create_line(25, y+25, rectangle_width+25, y+25, fill="#476042")
+	  
+# Input Parameters:
+# (x1, y1) first point on arc
+# (x2, y2) second point on arc
+# (xc, yc) center point of circle
+# direction : 1 ( clockwise ) , 0 ( anticlockwise )
 	  
 ########## CNC Control Window ###########
 	
@@ -273,8 +425,8 @@ stopbutton.grid(row=5, column=4, pady="40", padx="10")
 
 ############## CANVAS BEDSHEET ##################
 
-rectangle_width = 400
-rectangle_height = 500
+rectangle_width = 244
+rectangle_height = 488
 
 w = Canvas(window, width=450, height=540)
 w.grid(row=1, column=100, rowspan=6)
@@ -283,17 +435,15 @@ bedarea=w.create_rectangle(25, 25, rectangle_width+25, rectangle_height+25)
 
 #value1=int(scaleBox.get())
 
-checkered(w,20)
+checkered(w,10)
 
-boundingbox=w.create_rectangle(25, 25, xmax-xmin+25, ymax-ymin+25, fill = 'red')
+boundingbox=w.create_rectangle(25, 25, float((xmax-xmin)/5.0+25), float((ymax-ymin)/5.0+25), fill = 'red')
 w.tag_raise(boundingbox)
 
 ############### Debugger Box ####################
 
-debugSec=Text(window, width=80, height=31, fg="red")
+debugSec=Text(window, width=40, height=31, fg="red")
 debugSec.insert(1.0, "Debugger>>\n")
-debugSec.grid(row=1, column=200, rowspan=8)
-
-
+debugSec.grid(row=1, column=240, rowspan=8)
 
 window.mainloop()
