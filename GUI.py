@@ -4,7 +4,7 @@ from tkinter import ttk
 import math
 from numpy import *
 global value
-global i, xMin, xMax, yMax, yMin, xmin, xmax, ymin, ymax
+global i, xmin,xmax,ymin,ymax, valxprev,valyprev,valxnew,valynew, vali,valj, xMin,xMax,yMin,yMax, flag, valg, scalex, scaley
 
 ########### Functions #################
 
@@ -202,61 +202,65 @@ def findMinMax(x1, x2, y1, y2, xc, yc,direction):
 	
 #findMinMax(-1/1.41, 1/1.41, 1/1.41, -1/1.41, 0, 0,0)
 
-xmin,xmax,ymin,ymax, valxprev,valyprev,valxnew,valynew, vali,valj, xMin,xMax,yMin,yMax, flag= 99999.0,0.0,99999.0,0.0, 0.0,0.0,0.0,0.0, 0.0,0.0, 99999.0,0.0,99999.0,0.0, 0   
+xmin,xmax,ymin,ymax, valxprev,valyprev,valxnew,valynew, vali,valj, xMin,xMax,yMin,yMax, flag, valg, scalex, scaley= 99999.0,0.0,99999.0,0.0, 0.0,0.0,0.0,0.0, 0.0,0.0, 99999.0,0.0,99999.0,0.0, 0, 0, 5, 5
 x=''
 y=''
 i=''
 j=''
 g=''
-with open('GCode4.txt','r') as f:
- for line in f.readlines():
-  for word in line.split():
-   if(word[0]== "G"):
-    g=word[1]
-    valg=float(g)
-    #print(valg)
-    if(valg==2):
-     flag=0
-    elif(valg==3):
-     flag=1
-   valxprev= valxnew
-   valyprev= valynew
-   if(word[0] == "X"):
-    x=word[1:]
-    valxnew=float(x)
-    if(valxnew>xmax):
-     xmax=valxnew
-    if(valxnew<xmin):
-     xmin=valxnew
 
-    #print(x)
-   if(word[0] == "Y"):
-    y=word[1:]
-    valynew=float(y)
-    if(valynew>ymax):
-     ymax=valynew
-    if(valynew<ymin):
-     ymin=valynew
-    #print(y)
+with open('GCode2.txt','r') as f:
+    for line in f.readlines():
+        for word in line.split():
+            if(word[0]== "G"):
+                g=word[1]
+                valg=float(g)	
+                #print(valg)
+            if(valg==2):
+                flag=0
+            elif(valg==3):
+                flag=1   
+            if(word[0] == "X"):
+                x=word[1:]
+                valxnew=float(x)
+                if(valxnew>xmax):
+                    xmax=valxnew
+                if(valxnew<xmin):
+                    xmin=valxnew
+                    #print(x)
+            if(word[0] == "Y"):
+                y=word[1:]
+                valynew=float(y)
+                if(valynew>ymax):
+                    ymax=valynew
+                if(valynew<ymin):
+                    ymin=valynew
+                #print(y)
 	
-   if(word[0]== "I"):
-    i=word[1:]
-    vali=float(i)
-    #print(vali)
-   if(word[0]== "J"):
-    j=word[1:]
-    valj=float(j)
-    #print(valj)
-   
-  xMin,yMin,xMax,yMax=findMinMax(valxprev ,valxnew, valyprev, valynew, valxprev+vali, valyprev+valj, flag)
-  xMin=float(xMin)
-  xMax=float(xMax)
-  yMin=float(yMin)
-  yMax=float(yMax)
+            if(word[0]== "I"):
+                i=word[1:]
+                vali=float(i)
+                #print(vali)
+            if(word[0]== "J"):
+                j=word[1:]
+                valj=float(j)
+                #print(valj)
+        print("Vali={0}, Valj={1}\n".format(vali, valj))
+        print("Valxprev={0}, Valxnew={1}, Valyprev={2}, Valynew={3}, Xcentre={4}, Ycentre={5}, Flag={6}\n".format(valxprev ,valxnew, valyprev, valynew, valxprev+vali, valyprev+valj, flag)) 
+        xMin,yMin,xMax,yMax=findMinMax(valxprev ,valxnew, valyprev, valynew, valxprev+vali, valyprev+valj, flag)
+        valxprev= valxnew
+        valyprev= valynew
+
+xMin=float(xMin)
+xMax=float(xMax)
+yMin=float(yMin)
+yMax=float(yMax)
+
 print("xmax={0}, xMax={1} \n".format(xmax, xMax))
 print("xmin={0}, xMin={1} \n".format(xmin, xMin))
 print("ymax={0}, yMax={1} \n".format(ymax, yMax))
 print("ymin={0}, yMin={1} \n".format(ymin, yMin))	
+
 if(xmax<xMax):
  xmax=xMax
 if(xmin>xMin):
@@ -269,14 +273,6 @@ print(xmax)
 print(xmin)
 print(ymax)
 print(ymin)
-
-def checkered(canvas, line_distance):
-   # vertical lines at an interval of "line_distance" pixel
-   for x in range(line_distance,rectangle_width,line_distance):
-      w.create_line(x+25, 25, x+25, rectangle_height+25, fill="#476042")
-   # horizontal lines at an interval of "line_distance" pixel
-   for y in range(line_distance,rectangle_height,line_distance):
-      w.create_line(25, y+25, rectangle_width+25, y+25, fill="#476042")
 	  
 # Input Parameters:
 # (x1, y1) first point on arc
@@ -308,10 +304,13 @@ frame4=Frame(window)
 frame4.grid(row=4, column=0)
 
 frame5=Frame(window)
-frame5.grid(row=6, column=0, pady=20)
+frame5.grid(row=7, column=0, pady=20)
 
 frame6=Frame(window)
 frame6.grid(row=5, column=0, pady=10)
+
+frame7=Frame(window)
+frame7.grid(row=6, column=0)
 
 ############### Labels ##################
 
@@ -405,23 +404,49 @@ subbutton= Button(frame4, text="-", height='1', width='2', command=decrement)
 subbutton.grid(row=4, column=8, padx=(10,0))
 #subbutton.pack()
 
-scale=StringVar(window, value="20")
-scaleBox=Entry(frame6, width='7', textvariable=scale)
-scaleBox.grid(row=5, column=1, columnspan=2, padx=(0,5))
+def checkered(canvas, scalex, scaley):
+   # vertical lines at an interval of "line_distance" pixel
+   for x in range(scalex,rectangle_width,scalex):
+      w.create_line(x+25, 25, x+25, rectangle_height+25, fill="#476042")
+   # horizontal lines at an interval of "line_distance" pixel
+   for y in range(scaley,rectangle_height,scaley):
+      w.create_line(25, y+25, rectangle_width+25, y+25, fill="#476042")
+	  
+def getScaleVal():
+    #selection = "Value of X = " + str(var1.get()) + " Value of Y = " + str(var2.get())
+    #label.config(text = selection) 
+    scalex=int(var1.get())
+    scaley=int(var2.get())
+    #print("scaleX= {0}, scaleY= {1}".format(scalex, scaley))
+    checkered(w, scalex, scaley)	
+
+var1 = IntVar()
+scaleXBox = Scale(frame6, orient='horizontal', from_=0, to=20, variable = var1, tickinterval=5)
+scaleXBox.grid(row=5, column=0, padx=(0,5))
+
+var2 = IntVar()
+scaleYBox = Scale(frame6, orient='vertical', from_=0, to=20, variable = var2, tickinterval=5)
+scaleYBox.grid(row=5, column=1)
+
+button = Button(frame7, text="Get Scale Value", command=getScaleVal)
+button.grid(row=6, column=2)
+#print("Scale Value X: {0}".format(var.get()))
+#label = Label(frame7)
+#label.grid(row=6, column=2)
 
 ############## FILE CONTROL PANEL ################
 
 importbutton=Button(frame5, text="U", height='2', width='4', command=UploadAction)
-importbutton.grid(row=5, column=1, pady="40", padx=(20,10))
+importbutton.grid(row=7, column=1, pady="10", padx=(20,10))
 
 playbutton=Button(frame5, text="|>", height='2', width='4')
-playbutton.grid(row=5, column=2, pady="40", padx="10")
+playbutton.grid(row=7, column=2, pady="10", padx="10")
 
 pausebutton=Button(frame5, text="||", height='2', width='4')
-pausebutton.grid(row=5, column=3, pady="40", padx="10")
+pausebutton.grid(row=7, column=3, pady="10", padx="10")
 
 stopbutton=Button(frame5, text="[]", height='2', width='4')
-stopbutton.grid(row=5, column=4, pady="40", padx="10")
+stopbutton.grid(row=7, column=4, pady="10", padx="10")
 
 ############## CANVAS BEDSHEET ##################
 
@@ -433,17 +458,18 @@ w.grid(row=1, column=100, rowspan=6)
 
 bedarea=w.create_rectangle(25, 25, rectangle_width+25, rectangle_height+25)
 
-#value1=int(scaleBox.get())
-
-checkered(w,10)
+#scale1=int(var.get())
+#scale1=changescale(val)
+#print("h",scale1)
+#checkered(w, 5)
 
 boundingbox=w.create_rectangle(25, 25, float((xmax-xmin)/5.0+25), float((ymax-ymin)/5.0+25), fill = 'red')
 w.tag_raise(boundingbox)
 
 ############### Debugger Box ####################
 
-debugSec=Text(window, width=40, height=31, fg="red")
+debugSec=Text(window, width=60, height=30, fg="red")
 debugSec.insert(1.0, "Debugger>>\n")
-debugSec.grid(row=1, column=240, rowspan=8)
+debugSec.grid(row=1, column=240, rowspan=5, pady= (30,0))
 
 window.mainloop()
