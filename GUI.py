@@ -4,48 +4,74 @@ from tkinter import ttk
 import math
 from numpy import *
 global value
-global i, xmin,xmax,ymin,ymax, valxprev,valyprev,valxnew,valynew, vali,valj, xMin,xMax,yMin,yMax, flag, valg, scalex, scaley
-
+global i, xmin,xmax,ymin,ymax, valxprev,valyprev,valxnew,valynew, vali,valj, xMin,xMax,yMin,yMax, flag, valg, scalex, scaley, SelectedfileFlag, flagRemoveBound
+rectangle_width = 244
+rectangle_height = 488
+valuex, valuey, valuez=0,0,0
 ########### Functions #################
 
 def colorChange():
     """Changes the button's color"""
     Connectbutton.configure(bg = "red")
 
+def sethome():
+    valuex, valuey, valuez=0,0,0
+    selection = "X = " + str(valuex) + " Y = " + str(valuey) + " Z = " + str(valuez)
+    currentX.config(text = selection)
+	
 def xpos():
-
-    #print("Moving in X+")
     value = entrybox.get()
-    #print("G00 X" + value)
-    
-    #debugSec.delete('1.0', END)
     astring="Moving in X+ \nGOO X"
     debugSec.insert(INSERT, astring + value + "\n")
+    global valuex, valuey, valuez
+    valuex=int(value)+valuex
+    selection = "X = " + str(valuex) + " Y = " + str(valuey) + " Z = " + str(valuez)
+    currentX.config(text = selection)
 	
 def xneg():
     value = entrybox.get()
     astring="Moving in X- \nGOO X-"
     debugSec.insert(INSERT, astring + value + "\n")
+    global valuex, valuey, valuez
+    valuex=valuex-int(value)
+    selection = "X = " + str(valuex) + " Y = " + str(valuey) + " Z = " + str(valuez)
+    currentX.config(text = selection)
 
 def ypos():
     value = entrybox.get()
     astring="Moving in Y \nGOO Y"
     debugSec.insert(INSERT, astring + value + "\n")
+    global valuex, valuey, valuez
+    valuey=valuey+int(value)
+    selection = "X = " + str(valuex) + " Y = " + str(valuey) + " Z = " + str(valuez)
+    currentX.config(text = selection)
 	
 def yneg():
     value = entrybox.get()
     astring="Moving in Y- \nGOO Y-"
     debugSec.insert(INSERT, astring + value + "\n")
+    global valuex, valuey, valuez
+    valuey=valuey-int(value)
+    selection = "X = " + str(valuex) + " Y = " + str(valuey) + " Z = " + str(valuez)
+    currentX.config(text = selection)
 
 def zpos():
     value = entrybox.get()
     astring="Moving in Z \nGOO Z"
     debugSec.insert(INSERT, astring + value + "\n")
+    global valuex, valuey, valuez
+    valuez=valuez+int(value)
+    selection = "X = " + str(valuex) + " Y = " + str(valuey) + " Z = " + str(valuez)
+    currentX.config(text = selection)
 	
 def zneg():
     value = entrybox.get()
     astring="Moving in Z- \nGOO Z-"
     debugSec.insert(INSERT, astring + value + "\n")
+    global valuex, valuey, valuez
+    valuez=valuez-int(value)
+    selection = "X = " + str(valuex) + " Y = " + str(valuey) + " Z = " + str(valuez)
+    currentX.config(text = selection)
 	
 def home():
     print("Moving to Home")
@@ -56,24 +82,44 @@ def diag1():
     astring1="Moving diagonally 1 \nGOO X-"
     astring2=" Y"
     debugSec.insert(INSERT, astring1 + value + astring2 + value + "\n")
+    global valuex, valuey, valuez
+    valuex=valuex-int(value)
+    valuey=valuey+int(value)
+    selection = "X = " + str(valuex) + " Y = " + str(valuey) + " Z = " + str(valuez)
+    currentX.config(text = selection)
 	
 def diag2():
     value = entrybox.get()
     astring1="Moving diagonally 2 \nGOO X"
     astring2=" Y"
     debugSec.insert(INSERT, astring1 + value + astring2 + value + "\n")
+    global valuex, valuey, valuez
+    valuex=valuex+int(value)
+    valuey=valuey+int(value)
+    selection = "X = " + str(valuex) + " Y = " + str(valuey) + " Z = " + str(valuez)
+    currentX.config(text = selection)
 	
 def diag3():
     value = entrybox.get()
     astring1="Moving diagonally 3 \nGOO X-"
     astring2=" Y-"
     debugSec.insert(INSERT, astring1 + value + astring2 + value + "\n")
+    global valuex, valuey, valuez
+    valuex=valuex-int(value)
+    valuey=valuey-int(value)
+    selection = "X = " + str(valuex) + " Y = " + str(valuey) + " Z = " + str(valuez)
+    currentX.config(text = selection)
 	
 def diag4():
     value = entrybox.get()
     astring1="Moving diagonally 3 \nGOO X"
     astring2=" Y-"
     debugSec.insert(INSERT, astring1 + value + astring2 + value + "\n")
+    global valuex, valuey, valuez
+    valuex=valuex+int(value)
+    valuey=valuey-int(value)
+    selection = "X = " + str(valuex) + " Y = " + str(valuey) + " Z = " + str(valuez)
+    currentX.config(text = selection)
 
 def increment():
 	value=int(entrybox.get())
@@ -105,13 +151,36 @@ def Scale():
 	scaleBox.insert(0, value)
 	return value
 '''
-def UploadAction(event=None):                             # Import File is getting selected and needs to be saved on RaspberryPi
-    filename = filedialog.askopenfilename()
-    print('Selected:', filename)
+	
+def checkered(canvas, scalex, scaley):
+   # vertical lines at an interval of "line_distance" pixel
+   for x in range(scalex,rectangle_width,scalex):
+      w.create_line(x+25, 25, x+25, rectangle_height+25, fill="#476042")
+   # horizontal lines at an interval of "line_distance" pixel
+   for y in range(scaley,rectangle_height,scaley):
+      w.create_line(25, y+25, rectangle_width+25, y+25, fill="#476042")
+	  
+def getScaleVal():
+    #selection = "Value of X = " + str(var1.get()) + " Value of Y = " + str(var2.get())
+    #label.config(text = selection) 
+    scalex=int(var1.get())
+    scaley=int(var2.get())
+    #print("scaleX= {0}, scaleY= {1}".format(scalex, scaley))
+    checkered(w, scalex, scaley)	
+	
 
+
+xmin,xmax,ymin,ymax, valxprev,valyprev,valxnew,valynew, vali,valj, xMin,xMax,yMin,yMax, flag, valg, scalex, scaley= 0.0,0.0,0.0,0.0, 0.0,0.0,0.0,0.0, 0.0,0.0, 0.0,0.0,0.0,0.0, 0, 0, 5, 5
+x=''
+y=''
+i=''
+j=''
+g=''
+	
 def findMinMax(x1, x2, y1, y2, xc, yc,direction):
     # xMin, yMin, xMax, yMax
     # compute radius of circle
+    global xMin, xMax, yMin, yMax
     radius = double(math.sqrt(pow((xc - x1), 2) + pow((yc - y1), 2)))
 
     # c(x1, x2, y1, y2, xc, yc):compute starting and ending points in polar coordinates
@@ -131,12 +200,12 @@ def findMinMax(x1, x2, y1, y2, xc, yc,direction):
             tEnd = t1
 
         delta = 0.01
-
+        '''
         xMin = xc + radius * cos(tStart)
         yMin = yc + radius * sin(tStart)
         xMax = xMin
         yMax = yMin
-
+        '''
         theta = tStart
 
         while theta < tEnd:
@@ -164,14 +233,14 @@ def findMinMax(x1, x2, y1, y2, xc, yc,direction):
             tStart = t1
             tEnd = t2
         delta = 0.01
-
+        '''
         xMin = xc + radius * cos(tStart)
         yMin = yc + radius * sin(tStart)
         xMax = xMin
         yMax = yMin
-
+        '''
         theta = tStart
-        tEnd = tEnd + 6.283
+        #tEnd = tEnd + 6.283
 
         while theta <= tEnd:
             # compute coordinates
@@ -202,78 +271,97 @@ def findMinMax(x1, x2, y1, y2, xc, yc,direction):
 	
 #findMinMax(-1/1.41, 1/1.41, 1/1.41, -1/1.41, 0, 0,0)
 
-xmin,xmax,ymin,ymax, valxprev,valyprev,valxnew,valynew, vali,valj, xMin,xMax,yMin,yMax, flag, valg, scalex, scaley= 99999.0,0.0,99999.0,0.0, 0.0,0.0,0.0,0.0, 0.0,0.0, 99999.0,0.0,99999.0,0.0, 0, 0, 5, 5
-x=''
-y=''
-i=''
-j=''
-g=''
+SelectedfileFlag, flagRemoveBound =0, 0
+filename=''
 
-with open('GCode2.txt','r') as f:
-    for line in f.readlines():
-        for word in line.split():
-            if(word[0]== "G"):
-                g=word[1]
-                valg=float(g)	
-                #print(valg)
-            if(valg==2):
-                flag=0
-            elif(valg==3):
-                flag=1   
-            if(word[0] == "X"):
-                x=word[1:]
-                valxnew=float(x)
-                if(valxnew>xmax):
-                    xmax=valxnew
-                if(valxnew<xmin):
-                    xmin=valxnew
-                    #print(x)
-            if(word[0] == "Y"):
-                y=word[1:]
-                valynew=float(y)
-                if(valynew>ymax):
-                    ymax=valynew
-                if(valynew<ymin):
-                    ymin=valynew
-                #print(y)
+
+def UploadAction(event=None):                             # Import File is getting selected and needs to be saved on RaspberryPi
+    filename = filedialog.askopenfilename()
+    SelectedfileFlag=1
+    BoundingBox(SelectedfileFlag, filename)
+    print('Selected:', filename)
+
+def BoundingBox(SelectedfileFlag, filename):
+    xmin,xmax,ymin,ymax, valxprev,valyprev,valxnew,valynew, vali,valj, xMin,xMax,yMin,yMax, flag, valg, scalex, scaley= 0.0,0.0,0.0,0.0, 0.0,0.0,0.0,0.0, 0.0,0.0, 0.0,0.0,0.0,0.0, 0, 0, 5, 5
+    x=''
+    y=''
+    i=''
+    j=''
+    g=''
+    if(SelectedfileFlag==1):
+        with open(filename,'r') as f:
+            for line in f.readlines():
+                for word in line.split():
+                    if(word[0]== "G"):
+                        g=word[1]
+                        valg=float(g)	
+                        #print(valg)
+                        if(valg==2):
+                            flag=0
+                        elif(valg==3):
+                            flag=1   
+                    elif(word[0] == "X"):
+                        x=word[1:]
+                        valxnew=float(x)
+                        if(valxnew>xmax):
+                            xmax=valxnew
+                        if(valxnew<xmin):
+                            xmin=valxnew
+                            #print(x)
+                    elif(word[0] == "Y"):
+                        y=word[1:]
+                        valynew=float(y)
+                        if(valynew>ymax):
+                            ymax=valynew
+                        if(valynew<ymin):
+                            ymin=valynew
+                            #print(y)
+                    elif(word[0]== "I"):
+                        i=word[1:]
+                        vali=float(i)
+                        #print(vali)
+                    elif(word[0]== "J"):
+                        j=word[1:]
+                        valj=float(j)
+                        #print(valj)
+			    
+                #print("Vali={0}, Valj={1}\n".format(vali, valj))
+                #print("Valxprev={0}, Valxnew={1}, Valyprev={2}, Valynew={3}, Xcentre={4}, Ycentre={5}, Flag={6}\n".format(valxprev ,valxnew, valyprev, valynew, valxprev+vali, valyprev+valj, flag)) 
+                xMin, yMin, xMax, yMax = findMinMax(valxprev,valxnew, valyprev, valynew, valxprev + vali, valyprev + valj, flag)
+                #xMin,yMin,xMax,yMax=findMinMax(valxprev ,valxnew, valyprev, valynew, valxprev + vali, valyprev + valj, flag)
+                valxprev= valxnew
+                valyprev= valynew
+                vali=0
+                valj=0
+#print("xmax={0}, xMax={1} \n".format(xmax, float(xMax)))
+#print("xmin={0}, xMin={1} \n".format(xmin, float(xMin)))
+#print("ymax={0}, yMax={1} \n".format(ymax, float(yMax)))
+#print("ymin={0}, yMin={1} \n".format(ymin, float(yMin)))	
+
+        if(xmax<xMax):
+            xmax=xMax
+        if(xmin>xMin):
+            xmin= xMin
+        if(ymax<yMax):
+            ymax=yMax
+        if(ymin>yMin):
+            ymin=yMin
+        print(xmax)
+        print(xmin)
+        print(ymax)
+        print(ymin)
+    #elif(SelectedfileFlag==0):
+    #   xmax,xmin,ymax,ymin=0.0,0.0,0.0,0.0
+    plot(xmax, xmin, ymax, ymin)
+
+def clear():
+    boundingbox=w.create_rectangle(25,25, rectangle_width+25, rectangle_height+25, fill='white')
+    w.tag_raise(boundingbox)
+
+def plot(xmax, xmin, ymax, ymin):
+    boundingbox=w.create_rectangle(25, 25, float((xmax-xmin)/5.0+25), float((ymax-ymin)/5.0+25), fill = 'red')
+    w.tag_raise(boundingbox)
 	
-            if(word[0]== "I"):
-                i=word[1:]
-                vali=float(i)
-                #print(vali)
-            if(word[0]== "J"):
-                j=word[1:]
-                valj=float(j)
-                #print(valj)
-        print("Vali={0}, Valj={1}\n".format(vali, valj))
-        print("Valxprev={0}, Valxnew={1}, Valyprev={2}, Valynew={3}, Xcentre={4}, Ycentre={5}, Flag={6}\n".format(valxprev ,valxnew, valyprev, valynew, valxprev+vali, valyprev+valj, flag)) 
-        xMin,yMin,xMax,yMax=findMinMax(valxprev ,valxnew, valyprev, valynew, valxprev+vali, valyprev+valj, flag)
-        valxprev= valxnew
-        valyprev= valynew
-
-xMin=float(xMin)
-xMax=float(xMax)
-yMin=float(yMin)
-yMax=float(yMax)
-
-print("xmax={0}, xMax={1} \n".format(xmax, xMax))
-print("xmin={0}, xMin={1} \n".format(xmin, xMin))
-print("ymax={0}, yMax={1} \n".format(ymax, yMax))
-print("ymin={0}, yMin={1} \n".format(ymin, yMin))	
-
-if(xmax<xMax):
- xmax=xMax
-if(xmin>xMin):
- xmin= xMin
-if(ymax<yMax):
- ymax=yMax
-if(ymin>yMin):
- ymin=yMin
-print(xmax)
-print(xmin)
-print(ymax)
-print(ymin)
-	  
 # Input Parameters:
 # (x1, y1) first point on arc
 # (x2, y2) second point on arc
@@ -285,11 +373,12 @@ print(ymin)
 window=Tk()
 window.title("CNC Control Box")
 window.geometry('{}x{}'.format(500, 300))
+#window.configure(background="yellow")
 
 ############### Frames ##################
 
 frame0=Frame(window)
-frame0.grid(row=0, column=0, pady=(25,0))
+frame0.grid(row=0, column=0, padx= (50,0), pady=(25,0))
 
 frame1=Frame(window)
 frame1.grid(row=1, column =0, pady=(25,0))
@@ -314,13 +403,22 @@ frame7.grid(row=6, column=0)
 
 ############### Labels ##################
 
+currentX=Label(frame0, height='2', width='20')
+currentX.grid(row=0, column=30)
+'''
+currentY=Label(frame0, height='2', width='20')
+currentY.grid(row=0, column=50)
+
+currentZ=Label(frame0, height='2', width='20')
+currentZ.grid(row=0, column=70)
+'''
 zlabel=Label(frame1, text="Z", height='2', width='2')
 #zlabel.grid(row=0, column=0, sticky=W+E+N+S, padx=70)
-zlabel.pack(padx=(0,5) , side=LEFT)
+zlabel.grid(row=1, column=1, padx=(0,5))
 
 ylabel=Label(frame1, text="Y")
 #ylabel.grid(row=0, column=4)
-ylabel.pack(padx=(65,90), side=LEFT)
+ylabel.grid(row=1, column=2, padx=(65,90))
 
 xlabel=Label(frame3, text="X", height='2', width='2')
 xlabel.grid(row=3, column=2, padx=(55,5))
@@ -332,10 +430,10 @@ scalelabel.grid(row=5, column=0)
 ############### Manual Control Panel ##################
 
 Connectbutton=Button(frame0, text="Connect", height='2', width='8', command = colorChange)
-Connectbutton.grid(row=0, column=0, padx=10)
+Connectbutton.grid(row=0, column=12, padx=8)
 
-SetHomebutton=Button(frame0, text="Set Home", height='2', width='8')
-SetHomebutton.grid(row=0, column=1)
+SetHomebutton=Button(frame0, text="Set Home", height='2', width='8', command=sethome)
+SetHomebutton.grid(row=0, column=14, padx=10)
 
 zpbutton=Button(frame2, text="+", height='2', width='2', command=zpos)
 #balloon = tix.Balloon(window)
@@ -404,22 +502,6 @@ subbutton= Button(frame4, text="-", height='1', width='2', command=decrement)
 subbutton.grid(row=4, column=8, padx=(10,0))
 #subbutton.pack()
 
-def checkered(canvas, scalex, scaley):
-   # vertical lines at an interval of "line_distance" pixel
-   for x in range(scalex,rectangle_width,scalex):
-      w.create_line(x+25, 25, x+25, rectangle_height+25, fill="#476042")
-   # horizontal lines at an interval of "line_distance" pixel
-   for y in range(scaley,rectangle_height,scaley):
-      w.create_line(25, y+25, rectangle_width+25, y+25, fill="#476042")
-	  
-def getScaleVal():
-    #selection = "Value of X = " + str(var1.get()) + " Value of Y = " + str(var2.get())
-    #label.config(text = selection) 
-    scalex=int(var1.get())
-    scaley=int(var2.get())
-    #print("scaleX= {0}, scaleY= {1}".format(scalex, scaley))
-    checkered(w, scalex, scaley)	
-
 var1 = IntVar()
 scaleXBox = Scale(frame6, orient='horizontal', from_=0, to=20, variable = var1, tickinterval=5)
 scaleXBox.grid(row=5, column=0, padx=(0,5))
@@ -437,7 +519,10 @@ button.grid(row=6, column=2)
 ############## FILE CONTROL PANEL ################
 
 importbutton=Button(frame5, text="U", height='2', width='4', command=UploadAction)
-importbutton.grid(row=7, column=1, pady="10", padx=(20,10))
+importbutton.grid(row=7, column=0, pady="10", padx="10")
+
+clearbutton=Button(frame5, text="Clear", height='2', width='4', command = clear)
+clearbutton.grid(row=7, column=1, pady="10", padx="10")
 
 playbutton=Button(frame5, text="|>", height='2', width='4')
 playbutton.grid(row=7, column=2, pady="10", padx="10")
@@ -450,9 +535,6 @@ stopbutton.grid(row=7, column=4, pady="10", padx="10")
 
 ############## CANVAS BEDSHEET ##################
 
-rectangle_width = 244
-rectangle_height = 488
-
 w = Canvas(window, width=450, height=540)
 w.grid(row=1, column=100, rowspan=6)
 
@@ -463,8 +545,7 @@ bedarea=w.create_rectangle(25, 25, rectangle_width+25, rectangle_height+25)
 #print("h",scale1)
 #checkered(w, 5)
 
-boundingbox=w.create_rectangle(25, 25, float((xmax-xmin)/5.0+25), float((ymax-ymin)/5.0+25), fill = 'red')
-w.tag_raise(boundingbox)
+#print(xmax, xmin, ymax, ymin)
 
 ############### Debugger Box ####################
 
