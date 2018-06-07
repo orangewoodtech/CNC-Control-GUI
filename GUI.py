@@ -1,18 +1,22 @@
 from tkinter import *
 from tkinter import filedialog
 from tkinter import ttk
-import math
+import threading
+import math, os
 from numpy import *
 global value
 global i, xmin,xmax,ymin,ymax, valxprev,valyprev,valxnew,valynew, vali,valj, xMin,xMax,yMin,yMax, flag, valg, scalex, scaley, SelectedfileFlag, flagRemoveBound
 rectangle_width = 244
 rectangle_height = 488
 valuex, valuey, valuez=0,0,0
+newest=''
 ########### Functions #################
 
 def colorChange():
     """Changes the button's color"""
     Connectbutton.configure(bg = "red")
+    ipaddress.config(text="IP Address: "+ "192.168.121.0")
+    clean()
 
 def sethome():
     valuex, valuey, valuez=0,0,0
@@ -166,9 +170,7 @@ def getScaleVal():
     scalex=int(var1.get())
     scaley=int(var2.get())
     #print("scaleX= {0}, scaleY= {1}".format(scalex, scaley))
-    checkered(w, scalex, scaley)	
-	
-
+    checkered(w, scalex, scaley)
 
 xmin,xmax,ymin,ymax, valxprev,valyprev,valxnew,valynew, vali,valj, xMin,xMax,yMin,yMax, flag, valg, scalex, scaley= 0.0,0.0,0.0,0.0, 0.0,0.0,0.0,0.0, 0.0,0.0, 0.0,0.0,0.0,0.0, 0, 0, 5, 5
 x=''
@@ -361,7 +363,47 @@ def clear():
 def plot(xmax, xmin, ymax, ymin):
     boundingbox=w.create_rectangle(25, 25, float((xmax-xmin)/5.0+25), float((ymax-ymin)/5.0+25), fill = 'red')
     w.tag_raise(boundingbox)
+
+import os, shutil
+
+def clean():
+    folder = 'C:\\Users\\Ankit Kumar\\Desktop\\Deskto'
+    for the_file in os.listdir(folder):
+        file_path = os.path.join(folder, the_file)
+        try:
+            if os.path.isfile(file_path):
+                os.unlink(file_path)
+        except Exception as e:
+            print(e)
+    rem()
 	
+def rem():
+    threading.Timer(10.0, rem).start()
+    folder = 'C:\\Users\\Ankit Kumar\\Desktop\\Deskto'
+    os.chdir(folder)
+    files=[]
+    files = sorted(os.listdir(os.getcwd()), key=os.path.getmtime)
+    if(len(files)>0):
+        newest = files[-1]
+	
+        oldest = files[0:len(files)-1]
+    #print(newest)
+        for i in oldest:
+            file_path=os.path.join(folder, i)
+            print(file_path)
+            os.unlink(file_path)
+        newfilename.config(text="File Name:"+newest)
+    else:
+	    newfilename.config(text="File Name:")
+'''
+    for the_file in os.listdir(folder):
+        file_path = os.path.join(folder, the_file)
+        try:
+            if os.path.isfile(file_path):
+                os.unlink(file_path)
+        except Exception as e:
+            print(e)
+'''
 # Input Parameters:
 # (x1, y1) first point on arc
 # (x2, y2) second point on arc
@@ -512,6 +554,12 @@ scaleYBox.grid(row=5, column=1)
 
 button = Button(frame7, text="Get Scale Value", command=getScaleVal)
 button.grid(row=6, column=2)
+
+newfilename = Label(frame5, height=2, width=20)
+newfilename.grid(row=7, column=5)
+
+ipaddress = Label(frame5, height=2, width=25)
+ipaddress.grid(row=7, column=6)
 #print("Scale Value X: {0}".format(var.get()))
 #label = Label(frame7)
 #label.grid(row=6, column=2)
