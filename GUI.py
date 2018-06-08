@@ -4,6 +4,7 @@ from tkinter import ttk
 import threading
 import math, os
 from numpy import *
+from tkinter import messagebox
 global value
 global i, xmin,xmax,ymin,ymax, valxprev,valyprev,valxnew,valynew, vali,valj, xMin,xMax,yMin,yMax, flag, valg, scalex, scaley, SelectedfileFlag, flagRemoveBound
 rectangle_width = 244
@@ -25,7 +26,7 @@ def sethome():
 	
 def xpos():
     value = entrybox.get()
-    astring="Moving in X+ \nGOO X"
+    astring="Moving in X+ \nG00 X"
     debugSec.insert(INSERT, astring + value + "\n")
     global valuex, valuey, valuez
     valuex=int(value)+valuex
@@ -34,7 +35,7 @@ def xpos():
 	
 def xneg():
     value = entrybox.get()
-    astring="Moving in X- \nGOO X-"
+    astring="Moving in X- \nG00 X-"
     debugSec.insert(INSERT, astring + value + "\n")
     global valuex, valuey, valuez
     valuex=valuex-int(value)
@@ -43,7 +44,7 @@ def xneg():
 
 def ypos():
     value = entrybox.get()
-    astring="Moving in Y \nGOO Y"
+    astring="Moving in Y \nG00 Y"
     debugSec.insert(INSERT, astring + value + "\n")
     global valuex, valuey, valuez
     valuey=valuey+int(value)
@@ -52,7 +53,7 @@ def ypos():
 	
 def yneg():
     value = entrybox.get()
-    astring="Moving in Y- \nGOO Y-"
+    astring="Moving in Y- \nG00 Y-"
     debugSec.insert(INSERT, astring + value + "\n")
     global valuex, valuey, valuez
     valuey=valuey-int(value)
@@ -61,7 +62,7 @@ def yneg():
 
 def zpos():
     value = entrybox.get()
-    astring="Moving in Z \nGOO Z"
+    astring="Moving in Z \nG00 Z"
     debugSec.insert(INSERT, astring + value + "\n")
     global valuex, valuey, valuez
     valuez=valuez+int(value)
@@ -70,7 +71,7 @@ def zpos():
 	
 def zneg():
     value = entrybox.get()
-    astring="Moving in Z- \nGOO Z-"
+    astring="Moving in Z- \nG00 Z-"
     debugSec.insert(INSERT, astring + value + "\n")
     global valuex, valuey, valuez
     valuez=valuez-int(value)
@@ -83,7 +84,7 @@ def home():
 def diag1():
     #print("Moving diagonally 1")
     value = entrybox.get()
-    astring1="Moving diagonally 1 \nGOO X-"
+    astring1="Moving diagonally 1 \nG00 X-"
     astring2=" Y"
     debugSec.insert(INSERT, astring1 + value + astring2 + value + "\n")
     global valuex, valuey, valuez
@@ -94,7 +95,7 @@ def diag1():
 	
 def diag2():
     value = entrybox.get()
-    astring1="Moving diagonally 2 \nGOO X"
+    astring1="Moving diagonally 2 \nG00 X"
     astring2=" Y"
     debugSec.insert(INSERT, astring1 + value + astring2 + value + "\n")
     global valuex, valuey, valuez
@@ -105,7 +106,7 @@ def diag2():
 	
 def diag3():
     value = entrybox.get()
-    astring1="Moving diagonally 3 \nGOO X-"
+    astring1="Moving diagonally 3 \nG00 X-"
     astring2=" Y-"
     debugSec.insert(INSERT, astring1 + value + astring2 + value + "\n")
     global valuex, valuey, valuez
@@ -116,7 +117,7 @@ def diag3():
 	
 def diag4():
     value = entrybox.get()
-    astring1="Moving diagonally 3 \nGOO X"
+    astring1="Moving diagonally 3 \nG00 X"
     astring2=" Y-"
     debugSec.insert(INSERT, astring1 + value + astring2 + value + "\n")
     global valuex, valuey, valuez
@@ -355,13 +356,22 @@ def BoundingBox(SelectedfileFlag, filename):
     #elif(SelectedfileFlag==0):
     #   xmax,xmin,ymax,ymin=0.0,0.0,0.0,0.0
     plot(xmax, xmin, ymax, ymin)
-
+	
 def clear():
     boundingbox=w.create_rectangle(25,25, rectangle_width+25, rectangle_height+25, fill='white')
     w.tag_raise(boundingbox)
-
+	
 def plot(xmax, xmin, ymax, ymin):
-    boundingbox=w.create_rectangle(25, 25, float((xmax-xmin)/5.0+25), float((ymax-ymin)/5.0+25), fill = 'red')
+    global valuex, valuey
+    clear()
+    a=(valuex/5.0)+25
+    b=(valuey/5.0)+25
+    c=float((xmax-xmin+valuex)/5.0+25)
+    d=float((ymax-ymin+valuey)/5.0+25)
+    if(a<25 or b<25 or c>rectangle_width+25 or d>rectangle_height+25):
+        messagebox.showinfo("Error Message", "Crossed Cutting Area")
+        w.delete(boundingbox)		
+    boundingbox=w.create_rectangle(a, b, c, d, fill = 'red')
     w.tag_raise(boundingbox)
 
 import os, shutil
@@ -378,23 +388,28 @@ def clean():
     rem()
 	
 def rem():
-    threading.Timer(10.0, rem).start()
+    threading.Timer(5.0, rem).start()
     folder = 'C:\\Users\\Ankit Kumar\\Desktop\\Deskto'
     os.chdir(folder)
     files=[]
     files = sorted(os.listdir(os.getcwd()), key=os.path.getmtime)
     if(len(files)>0):
         newest = files[-1]
-	
         oldest = files[0:len(files)-1]
     #print(newest)
         for i in oldest:
             file_path=os.path.join(folder, i)
             print(file_path)
             os.unlink(file_path)
-        newfilename.config(text="File Name:"+newest)
+        newfilename.config(text="File Name: "+newest)
+		
+        SelectedfileFlag=1
+        folder = 'C:\\Users\\Ankit Kumar\\Desktop\\Deskto'
+        for the_file in os.listdir(folder):
+            file_path = os.path.join(folder, the_file)
+            BoundingBox(SelectedfileFlag, file_path)
     else:
-	    newfilename.config(text="File Name:")
+	    newfilename.config(text="Load File")
 '''
     for the_file in os.listdir(folder):
         file_path = os.path.join(folder, the_file)
@@ -420,130 +435,118 @@ window.geometry('{}x{}'.format(500, 300))
 ############### Frames ##################
 
 frame0=Frame(window)
-frame0.grid(row=0, column=0, padx= (50,0), pady=(25,0))
+frame0.grid(row=0, column=0, padx=(60,140))
 
 frame1=Frame(window)
-frame1.grid(row=1, column =0, pady=(25,0))
+frame1.grid(row=1, column=0, padx=(0,125), pady=5)
 
 frame2=Frame(window)
-frame2.grid(row=2, column=0)
+frame2.grid(row=2, column=0, padx=(25,165), pady=5, sticky='w')
 
 frame3=Frame(window)
-frame3.grid(row=3, column=0)
+frame3.grid(row=3, column=0, padx=(0,110), pady=5)
 
 frame4=Frame(window)
-frame4.grid(row=4, column=0)
+frame4.grid(row=4, column=0, padx=(0, 55), pady=5)
 
 frame5=Frame(window)
-frame5.grid(row=7, column=0, pady=20)
+frame5.grid(row=5, column=0, padx=(20,90), pady=(20,0))
 
 frame6=Frame(window)
-frame6.grid(row=5, column=0, pady=10)
+frame6.grid(row=6, column=0)
 
 frame7=Frame(window)
-frame7.grid(row=6, column=0)
+frame7.grid(row=7, column=0)
+
+frame8=Frame(window)
+frame8.grid(row=8, column=0)
 
 ############### Labels ##################
 
-currentX=Label(frame0, height='2', width='20')
-currentX.grid(row=0, column=30)
-'''
-currentY=Label(frame0, height='2', width='20')
-currentY.grid(row=0, column=50)
+currentX=Label(window, height='2', width='20')
+currentX.grid(row=0, column=5)
 
-currentZ=Label(frame0, height='2', width='20')
-currentZ.grid(row=0, column=70)
-'''
-zlabel=Label(frame1, text="Z", height='2', width='2')
+zlabel=Label(frame2, text="Z", height='2', width='2')
 #zlabel.grid(row=0, column=0, sticky=W+E+N+S, padx=70)
-zlabel.grid(row=1, column=1, padx=(0,5))
+zlabel.grid(row=2, column=0, padx=(60,80))
 
-ylabel=Label(frame1, text="Y")
+ylabel=Label(frame2, text="Y")
 #ylabel.grid(row=0, column=4)
-ylabel.grid(row=1, column=2, padx=(65,90))
+ylabel.grid(row=2, column=3)
 
 xlabel=Label(frame3, text="X", height='2', width='2')
-xlabel.grid(row=3, column=2, padx=(55,5))
+xlabel.grid(row=1, column=1)
 #xlabel.pack(padx=20, side=LEFT)
 
-scalelabel=Label(frame6, text="SCALE:", height='2', width='8')
-scalelabel.grid(row=5, column=0)
+#scalelabel=Label(frame6, text="SCALE:", height='2', width='8')
+#scalelabel.grid(row=5, column=0)
 
 ############### Manual Control Panel ##################
 
 Connectbutton=Button(frame0, text="Connect", height='2', width='8', command = colorChange)
-Connectbutton.grid(row=0, column=12, padx=8)
+Connectbutton.grid(row=0, column=0, padx=(0, 20))
 
 SetHomebutton=Button(frame0, text="Set Home", height='2', width='8', command=sethome)
-SetHomebutton.grid(row=0, column=14, padx=10)
+SetHomebutton.grid(row=0, column=3, padx=(0, 20))
 
-zpbutton=Button(frame2, text="+", height='2', width='2', command=zpos)
-#balloon = tix.Balloon(window)
-#balloon.bind_widget(zpbutton, balloonmsg="Click for moving in +ve Z axis")
-zpbutton.grid(row=2, column=0, padx=(20,10))
-#zpbutton.pack(padx=100, side=LEFT)
+clearbutton=Button(frame0, text="Clear", height='2', width='8', command = clear)
+clearbutton.grid(row=0, column=4)
 
-xnypbutton= Button(frame2, height='2', width='2', command= diag1)
-xnypbutton.grid(row=2, column=3, padx=(40,0))
-#xnypbutton.pack(padx=0, side=LEFT)
+ipaddress = Label(window, height=2, width=25)
+ipaddress.grid(row=0, column=6, sticky="e")
 
-ypbutton= Button(frame2, text="+", height='2', width='2', command=ypos)
-ypbutton.grid(row=2, column=4)
-#ypbutton.pack(padx=0, side=LEFT)
+newfilename = Label(frame1, height=2, width=20)
+newfilename.grid(row=1, column=0)
 
-xpypbutton= Button(frame2, height='2', width='2', command=diag2)
-xpypbutton.grid(row=2, column=5)
-#xpypbutton.pack(padx=0, side=LEFT)
+zpbutton=Button(frame3, text="+", height='2', width='2', command=zpos)
+zpbutton.grid(row=0, column=0, padx=(40,30), pady=5)
 
-mulbutton= Button(frame2, text="x10", height='1', width='2', command=multiplyTen)
-mulbutton.grid(row=2, column=7, padx=(20,0))
-#mulbutton.pack(padx=20, side=LEFT)
+xnypbutton= Button(frame3, height='2', width='2', command= diag1)
+xnypbutton.grid(row=0, column=2, padx=(0,5))
 
-addbutton= Button(frame2, text="+", height='1', width='2', command=increment)
-addbutton.grid(row=2, column=8, padx=(10,0))
-#addbutton.pack(padx=20, side=LEFT)
+ypbutton= Button(frame3, text="+", height='2', width='2', command=ypos)
+ypbutton.grid(row=0, column=3)
+
+xpypbutton= Button(frame3, height='2', width='2', command=diag2)
+xpypbutton.grid(row=0, column=4)
+
+mulbutton= Button(frame3, text="x10", height='1', width='2', command=multiplyTen)
+mulbutton.grid(row=0, column=6)
+
+addbutton= Button(frame3, text="+", height='1', width='2', command=increment)
+addbutton.grid(row=0, column=7)
 
 xnbutton= Button(frame3, text="-", height='2', width='2', command=xneg)
-xnbutton.grid(row=3, column=3, padx=(12,0))
-#xnbutton.pack(padx=0, side=LEFT)
+xnbutton.grid(row=1, column=2, padx=(0,5))
 
 homebutton= Button(frame3, text="O", height='2', width='2', command=home)
-homebutton.grid(row=3, column=4)
-#xoyobutton.pack(padx=0, side=LEFT)
+homebutton.grid(row=1, column=3)
 
 xpbutton= Button(frame3, text="+", height='2', width='2', command=xpos)
-xpbutton.grid(row=3, column=5, padx=(0,25))
-#xpbutton.pack(padx=0, side=LEFT)
+xpbutton.grid(row=1, column=4, padx=(5, 5))
 
 v=StringVar(window, value="20")
 entrybox=Entry(frame3, width='7', textvariable=v)
-entrybox.grid(row=3, column=8, columnspan=2, padx=(0,5))
-#spinbox.pack(padx=20, side=LEFT)
+entrybox.grid(row=1, column=6, columnspan=2)
 
-znbutton=Button(frame4, text="-", height='2', width='2', command=zneg)
-znbutton.grid(row=4, column=1, padx=(20,20))
-#znbutton.pack()
+znbutton=Button(frame3, text="-", height='2', width='2', command=zneg)
+znbutton.grid(row=2, column=0, padx=(10,0))
 
-xnynbutton= Button(frame4, height='2', width='2', command=diag3)
-xnynbutton.grid(row=4, column=3, padx=(30,0))
-#xnynbutton.pack()
+xnynbutton= Button(frame3, height='2', width='2', command=diag3)
+xnynbutton.grid(row=2, column=2, padx=(0,5))
 
-ynbutton= Button(frame4, text="-", height='2', width='2', command=yneg)
-ynbutton.grid(row=4, column=4)
-#ynbutton.pack()
+ynbutton= Button(frame3, text="-", height='2', width='2', command=yneg)
+ynbutton.grid(row=2, column=3, pady=5)
 
-xpynbutton= Button(frame4, height='2', width='2', command=diag4)
-xpynbutton.grid(row=4, column=5)
-#xpynbutton.pack()
+xpynbutton= Button(frame3, height='2', width='2', command=diag4)
+xpynbutton.grid(row=2, column=4, pady=5)
 
-divbutton= Button(frame4, text="/10", height='1', width='2', command=divideTen)
-divbutton.grid(row=4, column=7, padx=(20,0))
-#divbutton.pack()
+divbutton= Button(frame3, text="/10", height='1', width='2', command=divideTen)
+divbutton.grid(row=2, column=6, pady=5)
 
-subbutton= Button(frame4, text="-", height='1', width='2', command=decrement)
-subbutton.grid(row=4, column=8, padx=(10,0))
-#subbutton.pack()
-
+subbutton= Button(frame3, text="-", height='1', width='2', command=decrement)
+subbutton.grid(row=2, column=7)
+'''
 var1 = IntVar()
 scaleXBox = Scale(frame6, orient='horizontal', from_=0, to=20, variable = var1, tickinterval=5)
 scaleXBox.grid(row=5, column=0, padx=(0,5))
@@ -555,36 +558,45 @@ scaleYBox.grid(row=5, column=1)
 button = Button(frame7, text="Get Scale Value", command=getScaleVal)
 button.grid(row=6, column=2)
 
-newfilename = Label(frame5, height=2, width=20)
-newfilename.grid(row=7, column=5)
+'''
 
-ipaddress = Label(frame5, height=2, width=25)
-ipaddress.grid(row=7, column=6)
+def sel():
+   #selection = "Move " + str(movevar.get())
+   #label.config(text = selection)
+    global valuex, valuey
+
+movevar = IntVar()
+moveCNC = Radiobutton(frame5, text="Move CNC", variable=movevar, value=1, command=sel)
+moveCNC.grid(row=0, column=0, columnspan=2)
+
+moveGcode = Radiobutton(frame5, text="Move GCode", variable=movevar, value=2)
+moveGcode.grid(row=0, column=2, columnspan=2)
+
+label = Label(frame5)
+label.grid(row=0, column=4)
+
 #print("Scale Value X: {0}".format(var.get()))
 #label = Label(frame7)
 #label.grid(row=6, column=2)
 
 ############## FILE CONTROL PANEL ################
 
-importbutton=Button(frame5, text="U", height='2', width='4', command=UploadAction)
-importbutton.grid(row=7, column=0, pady="10", padx="10")
+#importbutton=Button(frame4, text="U", height='2', width='4', command=UploadAction)
+#importbutton.grid(row=0, column=0, )
 
-clearbutton=Button(frame5, text="Clear", height='2', width='4', command = clear)
-clearbutton.grid(row=7, column=1, pady="10", padx="10")
+playbutton=Button(frame4, text="|>", height='2', width='4')
+playbutton.grid(row=0, column=0, padx=(0,20))
 
-playbutton=Button(frame5, text="|>", height='2', width='4')
-playbutton.grid(row=7, column=2, pady="10", padx="10")
+pausebutton=Button(frame4, text="||", height='2', width='4')
+pausebutton.grid(row=0, column=1, padx=(20,20))
 
-pausebutton=Button(frame5, text="||", height='2', width='4')
-pausebutton.grid(row=7, column=3, pady="10", padx="10")
-
-stopbutton=Button(frame5, text="[]", height='2', width='4')
-stopbutton.grid(row=7, column=4, pady="10", padx="10")
+stopbutton=Button(frame4, text="[]", height='2', width='4')
+stopbutton.grid(row=0, column=2, padx=20)
 
 ############## CANVAS BEDSHEET ##################
 
-w = Canvas(window, width=450, height=540)
-w.grid(row=1, column=100, rowspan=6)
+w = Canvas(window, width=280, height=520)
+w.grid(row=1, column=5, rowspan=100)
 
 bedarea=w.create_rectangle(25, 25, rectangle_width+25, rectangle_height+25)
 
@@ -599,6 +611,6 @@ bedarea=w.create_rectangle(25, 25, rectangle_width+25, rectangle_height+25)
 
 debugSec=Text(window, width=60, height=30, fg="red")
 debugSec.insert(1.0, "Debugger>>\n")
-debugSec.grid(row=1, column=240, rowspan=5, pady= (30,0))
+debugSec.grid(row=1, column=6, rowspan=7, pady= (30,0))
 
 window.mainloop()
