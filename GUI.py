@@ -30,9 +30,11 @@ import time
 
 data = None
 
-folder="/home/pi/Desktop/Orangewood_gerber"
+#folder="/home/pi/Desktop/Orangewood_gerber"
+folder="C:\\Users\\Ankit Kumar\\Desktop\\Deskto"
 
 s = socket(AF_INET, SOCK_STREAM)
+#s1 = socket(AF_INET, SOCK_DGRAM)
 print(s, type(s))
 print("Socket made")
 timeout = 3 # timeout in seconds
@@ -58,9 +60,25 @@ def colorChange():
     global SelectedfileFlag
     #SelectedfileFlag=
     clean()
-    Connectbutton.configure(bg = "red")
+    '''
+    global s1
+    HOST = '0.0.0.0'
+    # Listen on Port
+    PORT = 44444
+    #Size of receive buffer
+    BUFFER_SIZE = 1024
+    # Bind the socket to the host and port
+    s1.bind((HOST, PORT))
+    data = s1.recvfrom(BUFFER_SIZE)
+    Host=data[1]
+    host=Host[0]
+# Close connection
+    print(data[0], host)
+    print("Closing Socket")
+    s1.close()
+    '''
     global s
-    host = "192.168.43.147"
+    host='192.168.43.147'
     print("Connecting to " + host)
     port = 80
     s.connect((host,port))
@@ -75,13 +93,12 @@ def colorChange():
     h=e.decode()
     print(h)
     Connectbutton.configure(bg = "red")
-    #ipaddress.config(text="IP Address: "+ "192.168.121.0")
-    os.system('./shell.sh')
+    #os.system('./shell.sh')
     #print("Server Executed ")
     SelectedfileFlag=1
     rem()
     #print("Ab Play Chalega")
-    
+#    '''
     #os.system(folder) # This will change the present working directory 
     #os.system("uwsgi --socket 0.0.0.0:8080 --protocol=http -w run:app")
 
@@ -291,7 +308,9 @@ def home():
         c='G'
         e=c.encode()
         s.sendall(e)
-        homeStr="G90G0X"+str(valuex)+"Y"+str(valuey)+"\nG90\n"
+        #homeStr="G90G0X"+str(valuex)+"Y"+str(valuey)+"\nG90\n"
+        homeStr="$H"
+
         data={}
         data["GCode"]=homeStr
         d=json.dumps(data)
@@ -428,7 +447,7 @@ def Scale():
 	scaleBox.insert(0, value)
 	return value
 '''
-	
+
 def checkered(canvas, scalex, scaley):
    # vertical lines at an interval of "line_distance" pixel
    for x in range(scalex,rectangle_width,scalex):
@@ -551,9 +570,13 @@ filename=''
 
 
 def UploadAction(event=None):                             # Import File is getting selected and needs to be saved on RaspberryPi
-    filename = filedialog.askopenfilename()
-    SelectedfileFlag=1
-    BoundingBox(SelectedfileFlag, filename)
+    global SelectedfileFlag
+    if(SelectedfileFlag==1):
+        filename = filedialog.askopenfilename()
+        global folder
+        folder, file = os.path.split(filename)
+        print(folder, file)
+        BoundingBox(SelectedfileFlag, filename)
     print('Selected:', filename)
 
 def BoundingBox(SelectedfileFlag, filename):
@@ -648,6 +671,17 @@ flag=0
 prevx=0
 prevy=0
 
+global SetClear
+SetClear=0
+
+def Clear():
+    w.delete("all")
+    global a,b,c,d
+    a,b,c,d=0,0,0,0
+    SetClear=1
+    boundingbox=w.create_rectangle(2,2, rectangle_width+2, rectangle_height+2, fill='white')
+    w.tag_raise(boundingbox)
+
 def move():
     global xmax, xmin, ymax, ymin
     if(int(movevar.get())==2):
@@ -657,7 +691,7 @@ def move():
 
 def plot():
     print("Plot Hua")
-    global valuex, valuey,flag1, prevx,prevy, xmax, xmin,ymax,ymin
+    global valuex, valuey,flag1, prevx,prevy, xmax, xmin,ymax,ymin, SetClear
     t=threading.Timer(1.0, move)
     t.start()
     #clear()
@@ -667,16 +701,19 @@ def plot():
     c=float((xmax-xmin+valuex)/6.0+2)
     d=float(408.4-(ymax-ymin+valuey)/6.0)
     print(a, b, c, d)
-
+    
+    if(SetClear==1):
+        a,b,c,d, valuex, valuey, xmin, xmax, ymin, ymax=0,0,0,0, 0, 0, 0, 0, 0, 0
     if(valuex!=prevx or valuey!=prevy):
         flag1=0
 
     if(a>=2 and b<=408.4 and c<=rectangle_width+2 and d>=2):
         clear()
         print("Bounding Box Banega CNC Bed pe")
-        boundingbox=w.create_rectangle(a, b, c, d, fill = 'red')
-        w.tag_raise(boundingbox)
-        flag1=0
+        if(SetClear==0):
+            boundingbox=w.create_rectangle(a, b, c, d, fill = 'red')
+            w.tag_raise(boundingbox)
+            flag1=0
     elif(flag1==0):
         top = Toplevel()
         top.title('Error')
@@ -687,14 +724,16 @@ def plot():
     prevy=valuey
     #t.cancel()
 
+initial=0
 switch=True
 def PlayFile(): 
+    initial=time.time()
     def runn():
-        global running
+        global running, initial
         global s
-        global folder
-        for the_file in os.listdir(folder):
-            file_path = os.path.join(folder, the_file)
+        global folder, file
+        for file in os.listdir(folder):
+            file_path = os.path.join(folder, file)
         data = open(file_path,"r")
         d = data.readlines()
         p=""
@@ -718,6 +757,7 @@ def PlayFile():
                 j+=1
             i+=1
         i=0
+		
         while(i<len(dic)):
             print(running)
             if(running == False):  
@@ -756,9 +796,108 @@ def Play():
     PlayFile()
 
 def Stop():
-    global running
+    global running, initial
     running = False
+    final=time.time()
+    print("Time:"+(final-initial))
 
+def GRBL_Settings():
+    '''
+    STEPS="$100="+XSteps.get()+"\n" + "$101="+YSteps.get()+"\n" + "$102="+YSteps.get()+"\n"
+    MAXRATE="$110="+XMaxRate.get()+"\n" + "$111="+YMaxRate.get()+"\n" + "$112="+ZMaxRate.get()+"\n"
+    ACCELERATION="$120="+XAcceleration.get()+"\n" + "$121="+YAcceleration.get()+"\n" + "$122="+ZAcceleration.get()+"\n"
+    SettingSec.insert(INSERT, STEPS+MAXRATE+ACCELERATION + "\n")
+    '''
+    c='G'
+    e=c.encode()
+    s.sendall(e)
+    homeStr="$"+str(getGRBL.get())+"="+str(valueGRBL.get())
+    print(homeStr)
+    data={}
+    data["GCode"]=homeStr
+    d=json.dumps(data)
+    b=d.encode()
+    s.sendall(b)
+    
+    c=s.recv(1)
+    j=c.decode()
+
+def RefreshGRBL():
+    print("Refreshing Values")
+    homeStr="$$"
+    b=homeStr.encode()
+    s.sendall(b)
+    c=s.recv(1024)
+    j=c.decode()
+    print(j)
+
+def SET_X_STEPS():
+    v10.set("100")
+
+def SET_Y_STEPS():
+    v10.set("101")
+
+def SET_Z_STEPS():
+    v10.set("102")
+
+def SET_X_MAX():
+    v10.set("110")
+
+def SET_Y_MAX():
+    v10.set("111")
+
+def SET_Z_MAX():
+    v10.set("112")
+
+def SET_X_ACCELERATION():
+    v10.set("120")
+
+def SET_Y_ACCELERATION():
+    v10.set("121")
+
+def SET_Z_ACCELERATION():
+    v10.set("122")
+
+def incrementEntry():
+    value=int(changeamountGRBL.get())
+    value=value+1
+    changeamountGRBL.delete(0, 'end')
+    changeamountGRBL.insert(0, value)
+
+def decrementEntry():
+    value=int(changeamountGRBL.get())
+    value=value-1
+    changeamountGRBL.delete(0, 'end')
+    changeamountGRBL.insert(0, value)
+
+def incrementGRBL():
+    value1=int(variable.get())
+    value2=int(valueGRBL.get())
+    value=value1+value2
+    valueGRBL.delete(0, 'end')
+    valueGRBL.insert(0, value)
+
+def decrementGRBL():
+    value1=int(changeamountGRBL.get())
+    value2=int(variable.get())
+    value=value2-value1
+    valueGRBL.delete(0, 'end')
+    valueGRBL.insert(0, value)
+
+def Refresh():
+    c='G'
+    e=c.encode()
+    s.sendall(e)
+    homeStr="$$"
+    data={}
+    data["GCode"]=homeStr
+    d=json.dumps(data)
+    b=d.encode()
+    s.sendall(b)
+    
+    c1=s.recv(1024)
+    j=c1.decode()
+    print(j, type(j))
 # Input Parameters:
 # (x1, y1) first point on arc
 # (x2, y2) second point on arc
@@ -767,10 +906,16 @@ def Stop():
 	  
 ########## CNC Control Window ###########
 	
-window=Tk()
-window.title("CNC Control Box")
-window.geometry('{}x{}'.format(500, 300))
-#window.configure(background="yellow")
+main=Tk()
+main.title("CNC Control Box")
+main.geometry('{}x{}'.format(500, 300))
+noteb = ttk.Notebook(main)
+noteb.grid(row=1, column=0, columnspan='50', rowspan='49')
+window=ttk.Frame(noteb)
+noteb.add(window, text='Home')
+window2=ttk.Frame(noteb)
+noteb.add(window2, text='Settings')
+#main.configure(background="yellow")
 
 ############### Frames ##################
 
@@ -797,14 +942,14 @@ frame5=Frame(window)
 #frame5.grid(row=4, column=0, padx=(20,90), pady=(20,0))
 frame5.grid(row=4, column=0)
 
-frame6=Frame(window)
-frame6.grid(row=5, column=0)
+frame6=Frame(window2)
+frame6.grid(row=0, column=0, sticky='W')
 
-frame7=Frame(window)
-frame7.grid(row=6, column=0)
+frame7=Frame(window2)
+frame7.grid(row=1, column=0, sticky='W', pady=20)
 
-frame8=Frame(window)
-frame8.grid(row=8, column=0)
+frame8=Frame(window2)
+frame8.grid(row=2, column=0)
 
 ############### Labels ##################
 
@@ -824,8 +969,120 @@ xlabel=Label(frame3, text="X", height='2', width='2')
 xlabel.grid(row=2, column=1)
 #xlabel.pack(padx=20, side=LEFT)
 
+setXSteps=Label(frame6, text="$100", height='1', width='4')
+setXSteps.grid(row=0, column=0, sticky='W')
+xstepbutton=Button(frame6, text='X steps/mm', height='1', width='20', command=SET_X_STEPS)
+xstepbutton.grid(row=0, column=1)
+v1=StringVar(frame6, value="250.00")
+XSteps=Entry(frame6, width='7', textvariable=v1)
+XSteps.grid(row=0, column=2, columnspan=2)
+
+setYSteps=Label(frame6, text="$101", height='1', width='4')
+setYSteps.grid(row=1, column=0, sticky='W')
+ystepbutton=Button(frame6, text='Y steps/mm', height='1', width='20', command=SET_Y_STEPS)
+ystepbutton.grid(row=1, column=1)
+v2=StringVar(frame6, value="250.00")
+YSteps=Entry(frame6, width='7', textvariable=v2)
+YSteps.grid(row=1, column=2, columnspan=2)
+
+setZSteps=Label(frame6, text="$102", height='1', width='4')
+setZSteps.grid(row=2, column=0, sticky='W')
+zstepbutton=Button(frame6, text='Z steps/mm', height='1', width='20', command=SET_Z_STEPS)
+zstepbutton.grid(row=2, column=1)
+v3=StringVar(frame6, value="250.00")
+ZSteps=Entry(frame6, width='7', textvariable=v3)
+ZSteps.grid(row=2, column=2, columnspan=2)
+
+setXMaxRate=Label(frame6, text="$110", height='1', width='4')
+setXMaxRate.grid(row=3, column=0, sticky='W')
+xmaxbutton=Button(frame6, text='X Max Rate, mm/min', height='1', width='20', command=SET_X_MAX)
+xmaxbutton.grid(row=3, column=1)
+v4=StringVar(frame6, value="500.00")
+XMaxRate=Entry(frame6, width='7', textvariable=v4)
+XMaxRate.grid(row=3, column=2, columnspan=2)
+
+setYMaxRate=Label(frame6, text="$111", height='1', width='4')
+setYMaxRate.grid(row=4, column=0, sticky='W')
+ymaxbutton=Button(frame6, text='Y Max Rate, mm/min', height='1', width='20', command=SET_Y_MAX)
+ymaxbutton.grid(row=4, column=1)
+v5=StringVar(frame6, value="500.00")
+YMaxRate=Entry(frame6, width='7', textvariable=v5)
+YMaxRate.grid(row=4, column=2, columnspan=2)
+
+setZMaxRate=Label(frame6, text="$112", height='1', width='4')
+setZMaxRate.grid(row=5, column=0, sticky='W')
+zmaxbutton=Button(frame6, text='Z Max Rate, mm/min', height='1', width='20', command=SET_Z_MAX)
+zmaxbutton.grid(row=5, column=1)
+v6=StringVar(frame6, value="500.00")
+ZMaxRate=Entry(frame6, width='7', textvariable=v6)
+ZMaxRate.grid(row=5, column=2, columnspan=2)
+
+setXAcceleration=Label(frame6, text="$120", height='1', width='4')
+setXAcceleration.grid(row=6, column=0, sticky='W')
+setxaccelerationbutton=Button(frame6, text='X Acceleration, mm/sec^2 ', height='1', width='20', command=SET_X_ACCELERATION)
+setxaccelerationbutton.grid(row=6, column=1)
+v7=StringVar(frame6, value="10.00")
+XAcceleration=Entry(frame6, width='7', textvariable=v7)
+XAcceleration.grid(row=6, column=2, columnspan=2)
+
+setYAcceleration=Label(frame6, text="$121", height='1', width='4')
+setYAcceleration.grid(row=7, column=0, sticky='W')
+setyaccelerationbutton=Button(frame6, text='Y Acceleration, mm/sec^2 ', height='1', width='20', command=SET_Y_ACCELERATION)
+setyaccelerationbutton.grid(row=7, column=1)
+v8=StringVar(frame8, value="10.00")
+YAcceleration=Entry(frame6, width='7', textvariable=v8)
+YAcceleration.grid(row=7, column=2, columnspan=2)
+
+setZAcceleration=Label(frame6, text="$122", height='1', width='4')
+setZAcceleration.grid(row=8, column=0, sticky='W')
+setzaccelerationbutton=Button(frame6, text='Z Acceleration, mm/sec^2 ', height='1', width='20', command=SET_Z_ACCELERATION)
+setzaccelerationbutton.grid(row=8, column=1)
+v9=StringVar(frame8, value="10.00")
+ZAcceleration=Entry(frame6, width='7', textvariable=v9)
+ZAcceleration.grid(row=8, column=2, columnspan=2)
+
+#CommandLine=Text(frame6, height=1, width=20)
+#CommandLine.grid(row=9, column=0)
+
+slabel=Label(frame7, text="$", height='1', width='1')
+slabel.grid(row=1, column=0, sticky='W')
+v10=StringVar(frame7, value='0')
+getGRBL=Entry(frame7, width='7', textvariable=v10)
+getGRBL.grid(row=1, column=1)
+equallabel=Label(frame7, text="=", height='1', width='1')
+equallabel.grid(row=1, column=2, sticky='W')
+v11=StringVar(frame7, value='0')
+valueGRBL=Entry(frame7, width='7', textvariable=v11)
+valueGRBL.grid(row=1, column=3)
+v12=StringVar(frame7, value='10')
+#changeamountGRBL=Entry(frame7, width='7', textvariable=v12)
+#changeamountGRBL.grid(row=1, column=4, padx=10)
+GRBL_Update= Button(frame7, text="Update", height='1', width='7', command=GRBL_Settings)
+GRBL_Update.grid(row=1, column=5)
+
+OPTIONS = ["1","10","100", "1000", "10000"]
+variable = StringVar(frame7)
+variable.set(OPTIONS[0])
+
+w1 = OptionMenu(frame7, variable, *OPTIONS)
+w1.config(width='5')
+w1.grid(row=1, column=4, padx=10)
+
+addvalueGRBL=Button(frame7, text="+", height='1', width='1', command=incrementGRBL)
+addvalueGRBL.grid(row=0, column=3)
+#addvalue= Button(frame7, text="+", height='1', width='1', command=incrementEntry)
+#addvalue.grid(row=0, column=4)
+subvalueGRBL=Button(frame7, text="-", height='1', width='1', command= decrementGRBL)
+subvalueGRBL.grid(row=2, column=3)
+#subvalue= Button(frame7, text="-", height='1', width='1', command=decrementEntry)
+#subvalue.grid(row=2, column=4)
 #scalelabel=Label(frame6, text="SCALE:", height='2', width='8')
 #scalelabel.grid(row=5, column=0)
+
+Refresh= Button(frame7, text="Refresh", height='1', width='7', command=Refresh)
+Refresh.grid(row=2, column=5)
+
+
 
 ############### Manual Control Panel ##################
 
@@ -835,7 +1092,7 @@ Connectbutton.grid(row=0, column=0, padx=(0, 2))
 SetHomebutton=Button(frame0, text="Set Home", height='2', width='8', command=sethome)
 SetHomebutton.grid(row=0, column=3, padx=(0, 2))
 
-clearbutton=Button(frame0, text="Clear", height='2', width='8', command = clear)
+clearbutton=Button(frame0, text="Clear", height='2', width='8', command = Clear)
 clearbutton.grid(row=0, column=4)
 
 ipaddress = Label(frame1, height=2, width=25)
@@ -927,17 +1184,17 @@ label.grid(row=0, column=4)
 
 ############## FILE CONTROL PANEL ################
 
-#importbutton=Button(frame4, text="U", height='2', width='4', command=UploadAction)
-#importbutton.grid(row=0, column=0, )
+importbutton=Button(frame4, text="U", height='2', width='3', command=UploadAction)
+importbutton.grid(row=0, column=0, padx=(0,5))
 
-playbutton=Button(frame4, text="|>", height='2', width='4', command=Play)
-playbutton.grid(row=0, column=0, padx=(0,10))
+playbutton=Button(frame4, text="|>", height='2', width='3', command=Play)
+playbutton.grid(row=0, column=1, padx=(0,5))
 
-pausebutton=Button(frame4, text="||", height='2', width='4')
-pausebutton.grid(row=0, column=1, padx=(0,10))
+pausebutton=Button(frame4, text="||", height='2', width='3')
+pausebutton.grid(row=0, column=2, padx=(0,10))
 
-stopbutton=Button(frame4, text="[]", height='2', width='4', command=Stop)
-stopbutton.grid(row=0, column=2)
+stopbutton=Button(frame4, text="[]", height='2', width='3', command=Stop)
+stopbutton.grid(row=0, column=3)
 
 ############## CANVAS BEDSHEET ##################
 
@@ -959,4 +1216,8 @@ debugSec=Text(window, width=25, height=25, fg="red")
 debugSec.insert(1.0, "Debugger>>\n")
 debugSec.grid(row=0, column=5, rowspan=5, sticky='N')
 
-window.mainloop()
+SettingSec=Text(frame6, width=45, height=12, fg="red")
+SettingSec.insert(1.0, "Debugger>>\n")
+SettingSec.grid(row=0, column=5, rowspan=30, padx=(10,0), pady=(1,0), sticky='N')
+
+main.mainloop()
