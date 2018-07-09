@@ -7,6 +7,7 @@ import threading
 from threading import Thread
 import math, os, shutil, time
 from numpy import *
+import re
 #from tkinter import messagebox
 global value
 global i, xmin,xmax,ymin,ymax, valxprev,valyprev,valxnew,valynew, vali,valj, xMin,xMax,yMin,yMax, flag, valg, scalex, scaley, SelectedfileFlag, flagRemoveBound
@@ -34,7 +35,7 @@ data = None
 folder="C:\\Users\\Ankit Kumar\\Desktop\\Deskto"
 
 s = socket(AF_INET, SOCK_STREAM)
-#s1 = socket(AF_INET, SOCK_DGRAM)
+s1 = socket(AF_INET, SOCK_DGRAM)
 print(s, type(s))
 print("Socket made")
 timeout = 3 # timeout in seconds
@@ -59,8 +60,7 @@ def colorChange():
     """Changes the button's color"""
     global SelectedfileFlag
     #SelectedfileFlag=
-    clean()
-    '''
+    #clean()
     global s1
     HOST = '0.0.0.0'
     # Listen on Port
@@ -76,9 +76,8 @@ def colorChange():
     print(data[0], host)
     print("Closing Socket")
     s1.close()
-    '''
     global s
-    host='192.168.43.147'
+    #host='192.168.43.147'
     print("Connecting to " + host)
     port = 80
     s.connect((host,port))
@@ -95,6 +94,7 @@ def colorChange():
     Connectbutton.configure(bg = "red")
     #os.system('./shell.sh')
     #print("Server Executed ")
+
     SelectedfileFlag=1
     rem()
     #print("Ab Play Chalega")
@@ -172,10 +172,6 @@ def xpos():
     selection = "X = " + str(valuex) + " Y = " + str(valuey) + " Z = " + str(valuez)
     currentX.config(text = selection)
     if(int(movevar.get())==1):
-        c='G'
-        e=c.encode()
-        #print("wtf1")
-        s.sendall(e)
         homeStr="G90G0X"+str(valuex)+"\nG90\n"
         data={}
         data["GCode"]=homeStr
@@ -185,11 +181,12 @@ def xpos():
         print("wtf1")
         s.sendall(b)
     
-        c=s.recv(1)
+        c=s.recv(128)
         print("wtf2")
         j=c.decode()
         print(j)
-	
+        Spindle_Position(j)
+
 def xneg():
     value = entrybox.get()
     astring="Moving in X- \nG00 X-"
@@ -199,10 +196,6 @@ def xneg():
     selection = "X = " + str(valuex) + " Y = " + str(valuey) + " Z = " + str(valuez)
     currentX.config(text = selection)
     if(int(movevar.get())==1):
-        c='G'
-        e=c.encode()
-        #print("wtf1")
-        s.sendall(e)
         homeStr="G90G0X"+str(valuex)+"\nG90\n"
         data={}
         data["GCode"]=homeStr
@@ -210,8 +203,10 @@ def xneg():
         b=d.encode()
         s.sendall(b)
     
-        c=s.recv(1)
+        c=s.recv(128)
+        print("wtf2")
         j=c.decode()
+        print(j)
 
 def ypos():
     value = entrybox.get()
@@ -222,9 +217,6 @@ def ypos():
     selection = "X = " + str(valuex) + " Y = " + str(valuey) + " Z = " + str(valuez)
     currentX.config(text = selection)
     if(int(movevar.get())==1):
-        c='G'
-        e=c.encode()
-        s.sendall(e)
         homeStr="G90G0Y"+str(valuey)+"\nG90\n"
         data={}
         data["GCode"]=homeStr
@@ -232,8 +224,10 @@ def ypos():
         b=d.encode()
         s.sendall(b)
     
-        c=s.recv(1)
+        c=s.recv(128)
+        print("wtf2")
         j=c.decode()
+        print(j)
 	
 def yneg():
     value = entrybox.get()
@@ -244,9 +238,6 @@ def yneg():
     selection = "X = " + str(valuex) + " Y = " + str(valuey) + " Z = " + str(valuez)
     currentX.config(text = selection)
     if(int(movevar.get())==1):
-        c='G'
-        e=c.encode()
-        s.sendall(e)
         homeStr="G90G0Y"+str(valuey)+"\nG90\n"
         data={}
         data["GCode"]=homeStr
@@ -254,8 +245,10 @@ def yneg():
         b=d.encode()
         s.sendall(b)
     
-        c=s.recv(1)
+        c=s.recv(128)
+        print("wtf2")
         j=c.decode()
+        print(j)
 
 def zpos():
     value = entrybox.get()
@@ -266,9 +259,6 @@ def zpos():
     selection = "X = " + str(valuex) + " Y = " + str(valuey) + " Z = " + str(valuez)
     currentX.config(text = selection)
     if(int(movevar.get())==1):
-        c='G'
-        e=c.encode()
-        s.sendall(e)
         homeStr="G90G0Z"+str(valuez)+"\nG90\n"
         data={}
         data["GCode"]=homeStr
@@ -276,8 +266,10 @@ def zpos():
         b=d.encode()
         s.sendall(b)
     
-        c=s.recv(1)
+        c=s.recv(128)
+        print("wtf2")
         j=c.decode()
+        print(j)
 	
 def zneg():
     value = entrybox.get()
@@ -288,9 +280,6 @@ def zneg():
     selection = "X = " + str(valuex) + " Y = " + str(valuey) + " Z = " + str(valuez)
     currentX.config(text = selection)
     if(int(movevar.get())==1):
-        c='G'
-        e=c.encode()
-        s.sendall(e)
         homeStr="G90G0Z"+str(valuez)+"\nG90\n"
         data={}
         data["GCode"]=homeStr
@@ -298,16 +287,15 @@ def zneg():
         b=d.encode()
         s.sendall(b)
     
-        c=s.recv(1)
+        c=s.recv(128)
+        print("wtf2")
         j=c.decode()
+        print(j)
 	
 def home():
     print("Moving to Home")
     global valuex, valuey, s
     if(int(movevar.get())==1):
-        c='G'
-        e=c.encode()
-        s.sendall(e)
         #homeStr="G90G0X"+str(valuex)+"Y"+str(valuey)+"\nG90\n"
         homeStr="$H"
 
@@ -317,8 +305,10 @@ def home():
         b=d.encode()
         s.sendall(b)
     
-        c=s.recv(1)
+        c=s.recv(128)
+        print("wtf2")
         j=c.decode()
+        print(j)
 
 def diag1():
     #print("Moving diagonally 1")
@@ -332,9 +322,6 @@ def diag1():
     selection = "X = " + str(valuex) + " Y = " + str(valuey) + " Z = " + str(valuez)
     currentX.config(text = selection)
     if(int(movevar.get())==1):
-        c='G'
-        e=c.encode()
-        s.sendall(e)
         homeStr="G90G0X"+str(valuex)+"Y"+str(valuey)+"\nG90\n"
         data={}
         data["GCode"]=homeStr
@@ -342,8 +329,10 @@ def diag1():
         b=d.encode()
         s.sendall(b)
     
-        c=s.recv(1)
+        c=s.recv(128)
+        print("wtf2")
         j=c.decode()
+        print(j)
 	
 def diag2():
     value = entrybox.get()
@@ -356,9 +345,6 @@ def diag2():
     selection = "X = " + str(valuex) + " Y = " + str(valuey) + " Z = " + str(valuez)
     currentX.config(text = selection)
     if(int(movevar.get())==1):
-        c='G'
-        e=c.encode()
-        s.sendall(e)
         homeStr="G90G0X"+str(valuex)+"Y"+str(valuey)+"\nG90\n"
         data={}
         data["GCode"]=homeStr
@@ -366,8 +352,10 @@ def diag2():
         b=d.encode()
         s.sendall(b)
     
-        c=s.recv(1)
+        c=s.recv(128)
+        print("wtf2")
         j=c.decode()
+        print(j)
 	
 def diag3():
     value = entrybox.get()
@@ -380,9 +368,6 @@ def diag3():
     selection = "X = " + str(valuex) + " Y = " + str(valuey) + " Z = " + str(valuez)
     currentX.config(text = selection)
     if(int(movevar.get())==1):
-        c='G'
-        e=c.encode()
-        s.sendall(e)
         homeStr="G90G0X"+str(valuex)+"Y"+str(valuey)+"\nG90\n"
         data={}
         data["GCode"]=homeStr
@@ -390,8 +375,10 @@ def diag3():
         b=d.encode()
         s.sendall(b)
     
-        c=s.recv(1)
+        c=s.recv(128)
+        print("wtf2")
         j=c.decode()
+        print(j)
 	
 def diag4():
     value = entrybox.get()
@@ -404,9 +391,6 @@ def diag4():
     selection = "X = " + str(valuex) + " Y = " + str(valuey) + " Z = " + str(valuez)
     currentX.config(text = selection)
     if(int(movevar.get())==1):
-        c='G'
-        e=c.encode()
-        s.sendall(e)
         homeStr="G90G0X"+str(valuex)+"Y"+str(valuey)+"\nG90\n"
         data={}
         data["GCode"]=homeStr
@@ -414,8 +398,10 @@ def diag4():
         b=d.encode()
         s.sendall(b)
     
-        c=s.recv(1)
+        c=s.recv(128)
+        print("wtf2")
         j=c.decode()
+        print(j)
 
 def increment():
 	value=int(entrybox.get())
@@ -652,7 +638,6 @@ def BoundingBox(SelectedfileFlag, filename):
     #elif(SelectedfileFlag==0):
     #   xmax,xmin,ymax,ymin=0.0,0.0,0.0,0.0
     plot()
-    
 
 def play():
     
@@ -689,6 +674,9 @@ def move():
         t2.start()
     #elif(int(movevar.get())==1):
 
+SpindleX=100
+SpindleY=100
+
 def plot():
     print("Plot Hua")
     global valuex, valuey,flag1, prevx,prevy, xmax, xmin,ymax,ymin, SetClear
@@ -722,6 +710,9 @@ def plot():
         flag1=1	
     prevx=valuex
     prevy=valuey
+    global SpindleX, SpindleY
+    spindle=w.create_oval((SpindleX-30)/6.0, 408.4-(SpindleY-30)/6.0, (SpindleX+30)/6.0, 408.4- (SpindleY+30)/6.0, fill="green")
+    w.tag_raise(spindle)
     #t.cancel()
 
 initial=0
@@ -819,17 +810,20 @@ def GRBL_Settings():
     b=d.encode()
     s.sendall(b)
     
-    c=s.recv(1)
-    j=c.decode()
+    #c=s.recv(1)
+    #j=c.decode()
+    #print(j)
 
-def RefreshGRBL():
-    print("Refreshing Values")
-    homeStr="$$"
-    b=homeStr.encode()
-    s.sendall(b)
-    c=s.recv(1024)
-    j=c.decode()
-    print(j)
+def Spindle_Position(text): 
+    global SpindleX, SpindleY
+    x1=text.find("W")
+    b=text[x1+5:]
+
+    data=b.split(",")
+
+    SpindleX=data[0]
+    SpindleY=data[1]
+
 
 def SET_X_STEPS():
     v10.set("100")
@@ -878,11 +872,14 @@ def incrementGRBL():
     valueGRBL.insert(0, value)
 
 def decrementGRBL():
-    value1=int(changeamountGRBL.get())
-    value2=int(variable.get())
+    value1=int(variable.get())
+    value2=int(valueGRBL.get())
     value=value2-value1
     valueGRBL.delete(0, 'end')
     valueGRBL.insert(0, value)
+
+GRBL_code=[]
+GRBL_value=[]
 
 def Refresh():
     c='G'
@@ -896,8 +893,51 @@ def Refresh():
     s.sendall(b)
     
     c1=s.recv(1024)
-    j=c1.decode()
-    print(j, type(j))
+    L1=c1.decode()
+    print("--------------------")
+    L=(re.split('\n', L1))
+    print("String From Arduino")
+    #print("L1", L1)
+    GRBL_code=[]
+    GRBL_value=[]
+    counter=0
+    for x in L:
+        print(counter, x)
+        if(x.startswith('$')):
+            x1=x.find(" ")
+            #b=x[0:x1]
+            #print(b)
+            head, sep, tail=x.partition('=')
+            GRBL_code.append(head)
+            GRBL_value.append(tail)
+            counter=counter+1
+    x=0
+    #print("Now Breaking")
+    #print(GRBL_code, GRBL_value)
+    #print("Fetching")
+    x=GRBL_code.index("$100")
+    print("Index=", x)
+    print("----------------------")
+    y=GRBL_value[x]
+    #print("100=", y)
+    v1.set(y)
+    y=GRBL_value[x+1]
+    v2.set(y)
+    y=GRBL_value[x+2]
+    v3.set(y)
+    y=GRBL_value[x+3]
+    v4.set(y)
+    y=GRBL_value[x+4]
+    v5.set(y)
+    y=GRBL_value[x+5]
+    v6.set(y)
+    y=GRBL_value[x+6]
+    v7.set(y)
+    y=GRBL_value[x+7]
+    v8.set(y)
+    y=GRBL_value[x+8]
+    v9.set(y)
+
 # Input Parameters:
 # (x1, y1) first point on arc
 # (x2, y2) second point on arc
@@ -1055,8 +1095,8 @@ v11=StringVar(frame7, value='0')
 valueGRBL=Entry(frame7, width='7', textvariable=v11)
 valueGRBL.grid(row=1, column=3)
 v12=StringVar(frame7, value='10')
-#changeamountGRBL=Entry(frame7, width='7', textvariable=v12)
-#changeamountGRBL.grid(row=1, column=4, padx=10)
+changeamountGRBL=Entry(frame7, width='7', textvariable=v12)
+changeamountGRBL.grid(row=1, column=4, padx=10)
 GRBL_Update= Button(frame7, text="Update", height='1', width='7', command=GRBL_Settings)
 GRBL_Update.grid(row=1, column=5)
 
@@ -1070,12 +1110,10 @@ w1.grid(row=1, column=4, padx=10)
 
 addvalueGRBL=Button(frame7, text="+", height='1', width='1', command=incrementGRBL)
 addvalueGRBL.grid(row=0, column=3)
-#addvalue= Button(frame7, text="+", height='1', width='1', command=incrementEntry)
-#addvalue.grid(row=0, column=4)
+
 subvalueGRBL=Button(frame7, text="-", height='1', width='1', command= decrementGRBL)
 subvalueGRBL.grid(row=2, column=3)
-#subvalue= Button(frame7, text="-", height='1', width='1', command=decrementEntry)
-#subvalue.grid(row=2, column=4)
+
 #scalelabel=Label(frame6, text="SCALE:", height='2', width='8')
 #scalelabel.grid(row=5, column=0)
 
@@ -1202,6 +1240,8 @@ w = Canvas(window, width=205, height=410)
 w.grid(row=0, column=4, rowspan=5)
 
 bedarea=w.create_rectangle(2, 2, rectangle_width+2, rectangle_height+2)
+spindle=w.create_oval(valuex-1, valuey-1, valuex+1, valuey+1, fill="green")
+w.tag_raise(spindle)
 
 #scale1=int(var.get())
 #scale1=changescale(val)
