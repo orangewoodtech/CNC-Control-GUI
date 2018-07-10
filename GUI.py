@@ -10,12 +10,12 @@ from numpy import *
 import re
 #from tkinter import messagebox
 global value
-global i, xmin,xmax,ymin,ymax, valxprev,valyprev,valxnew,valynew, vali,valj, xMin,xMax,yMin,yMax, flag, valg, scalex, scaley, SelectedfileFlag, flagRemoveBound
+global i, xmin,xmax,ymin,ymax, valxprev,valyprev,valxnew,valynew, vali,valj, xMin,xMax,yMin,yMax, flag, valg, scalex, scaley, SelectedfileFlag, flagRemoveBound,a, b, c, d
 rectangle_width = 203.2
 rectangle_height = 406.4
 valuex, valuey, valuez=0,0,0
 newest=''
-
+#a,b,c,d=0,0,0,0
 to_exclude = ['select']
 
 from numpy import *
@@ -185,7 +185,7 @@ def xpos():
         print("wtf2")
         j=c.decode()
         print(j)
-        Spindle_Position(j)
+        #Spindle_Position(j)
 
 def xneg():
     value = entrybox.get()
@@ -661,37 +661,40 @@ SetClear=0
 
 def Clear():
     w.delete("all")
-    global a,b,c,d
-    a,b,c,d=0,0,0,0
+    #global a,b,c,d
+    #a,b,c,d=0,0,0,0
     SetClear=1
     boundingbox=w.create_rectangle(2,2, rectangle_width+2, rectangle_height+2, fill='white')
     w.tag_raise(boundingbox)
+
+prevX, prevY=0,0
 
 def move():
     global xmax, xmin, ymax, ymin
     if(int(movevar.get())==2):
         t2=threading.Timer(1.0, plot)
         t2.start()
-    #elif(int(movevar.get())==1):
+    elif(int(movevar.get())==1):
+        t3=threading.Timer(1.0, Spindle_Display)
+        t3.start()
 
-SpindleX=100
-SpindleY=100
+SpindleX=0
+SpindleY=0
 
 def plot():
     print("Plot Hua")
-    global valuex, valuey,flag1, prevx,prevy, xmax, xmin,ymax,ymin, SetClear
+    global valuex, valuey,flag1, prevx,prevy, xmax, xmin,ymax,ymin, SetClear,a ,b, c, d
     t=threading.Timer(1.0, move)
     t.start()
     #clear()
-    print(xmax, xmin, ymax, ymin, valuex, valuey)
     a=(valuex/6.0)+2
     b=408.4-(valuey/6.0)
     c=float((xmax-xmin+valuex)/6.0+2)
     d=float(408.4-(ymax-ymin+valuey)/6.0)
     print(a, b, c, d)
     
-    if(SetClear==1):
-        a,b,c,d, valuex, valuey, xmin, xmax, ymin, ymax=0,0,0,0, 0, 0, 0, 0, 0, 0
+    #if(SetClear==1):
+    #    a,b,c,d, valuex, valuey, xmin, xmax, ymin, ymax=0,0,0,0, 0, 0, 0, 0, 0, 0
     if(valuex!=prevx or valuey!=prevy):
         flag1=0
 
@@ -710,9 +713,6 @@ def plot():
         flag1=1	
     prevx=valuex
     prevy=valuey
-    global SpindleX, SpindleY
-    spindle=w.create_oval((SpindleX-30)/6.0, 408.4-(SpindleY-30)/6.0, (SpindleX+30)/6.0, 408.4- (SpindleY+30)/6.0, fill="green")
-    w.tag_raise(spindle)
     #t.cancel()
 
 initial=0
@@ -823,6 +823,18 @@ def Spindle_Position(text):
 
     SpindleX=data[0]
     SpindleY=data[1]
+delete=0
+def Spindle_Display():
+    global SpindleX, SpindleY, valuex, valuey, delete, a, b, c, d
+    t=threading.Timer(0.1, move)
+    t.start()
+    Clear()
+    print("valuex, valuey, a ,b, c, d", valuex, valuey, a,b,c,d)
+    boundingbox=w.create_rectangle(a, b, c, d, fill = 'red')
+    w.tag_raise(boundingbox)
+    spindle=w.create_oval((valuex-30)/6.0, 408.4-(valuey-30)/6.0, (valuex+30)/6.0, 408.4- (valuey+30)/6.0, fill="green")
+    w.tag_raise(spindle)
+
 
 
 def SET_X_STEPS():
@@ -882,6 +894,8 @@ GRBL_code=[]
 GRBL_value=[]
 
 def Refresh():
+    counter=0
+    #for counter in range(2):
     c='G'
     e=c.encode()
     s.sendall(e)
@@ -896,13 +910,16 @@ def Refresh():
     L1=c1.decode()
     print("--------------------")
     L=(re.split('\n', L1))
-    print("String From Arduino")
-    #print("L1", L1)
+    if 'Y' in L:
+        L.remove('Y')
+    #print("String From Arduino")
+    print("L1", L1)
+    print(L)
     GRBL_code=[]
     GRBL_value=[]
-    counter=0
+
     for x in L:
-        print(counter, x)
+    #print(counter, x)
         if(x.startswith('$')):
             x1=x.find(" ")
             #b=x[0:x1]
@@ -910,13 +927,12 @@ def Refresh():
             head, sep, tail=x.partition('=')
             GRBL_code.append(head)
             GRBL_value.append(tail)
-            counter=counter+1
     x=0
     #print("Now Breaking")
-    #print(GRBL_code, GRBL_value)
+    print(GRBL_code, GRBL_value)
     #print("Fetching")
     x=GRBL_code.index("$100")
-    print("Index=", x)
+    #print("Index=", x)
     print("----------------------")
     y=GRBL_value[x]
     #print("100=", y)
