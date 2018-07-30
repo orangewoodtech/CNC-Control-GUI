@@ -1,5 +1,3 @@
-#Tested Move GCode and Move CNC
-
 from tkinter import *
 from tkinter import filedialog
 from tkinter import ttk
@@ -8,14 +6,14 @@ from threading import Thread
 import math, os, shutil, time
 from numpy import *
 import re
-#from tkinter import messagebox
 global value
 global i, xmin,xmax,ymin,ymax, valxprev,valyprev,valxnew,valynew, vali,valj, xMin,xMax,yMin,yMax, flag, valg, scalex, scaley, SelectedfileFlag, flagRemoveBound,a, b, c, d
-rectangle_width = 203.2
-rectangle_height = 406.4
+#rectangle_width = 203.2
+#rectangle_height = 406.4
+rectangle_width = 174.17
+rectangle_height = 348.34
 valuex, valuey, valuez=0,0,0
 newest=''
-#a,b,c,d=0,0,0,0
 to_exclude = ['select']
 
 from numpy import *
@@ -59,8 +57,7 @@ def hashing(var):
 def colorChange():
     """Changes the button's color"""
     global SelectedfileFlag
-    #SelectedfileFlag=
-    #clean()
+    clean()
     global s1
     HOST = '0.0.0.0'
     # Listen on Port
@@ -77,7 +74,6 @@ def colorChange():
     print("Closing Socket")
     s1.close()
     global s
-    #host='192.168.43.147'
     print("Connecting to " + host)
     port = 80
     s.connect((host,port))
@@ -92,15 +88,14 @@ def colorChange():
     h=e.decode()
     print(h)
     Connectbutton.configure(bg = "red")
+    stopbutton.configure(bg = "white")
+    pausebutton.configure(bg = "white")
+    playbutton.configure(bg = "white")
     #os.system('./shell.sh')
     #print("Server Executed ")
 
     SelectedfileFlag=1
     rem()
-    #print("Ab Play Chalega")
-#    '''
-    #os.system(folder) # This will change the present working directory 
-    #os.system("uwsgi --socket 0.0.0.0:8080 --protocol=http -w run:app")
 
 def clean():
     global folder
@@ -111,13 +106,10 @@ def clean():
                 os.unlink(file_path)
         except Exception as e:
             print(e)
-    
-	
+    	
 def rem():
     t=threading.Timer(1.0, rem)
     t.start()
-    #t=threading.Thread(target=rem)
-    #t.start()
     global SelectedfileFlag
     global folder
     os.chdir(folder)
@@ -126,14 +118,12 @@ def rem():
     if(len(files)>0):
         newest = files[-1]
         oldest = files[0:len(files)-1]
-    #print(newest)
         for i in oldest:
             file_path=os.path.join(folder, i)
             print(file_path)
             os.unlink(file_path)
         newfilename.config(text="File Name: "+newest)
         if(SelectedfileFlag==1):
-           print("first pl,ay")
            play()
            SelectedfileFlag=0
     else:
@@ -147,19 +137,15 @@ def sethome():
     if(int(movevar.get())==1):
         c='G'
         e=c.encode()
-        #print("wtf1")
         s.sendall(e)
         homeStr="G10L20P1X0Y0Z0\n$G\n$#\n"
         data={}
         data["GCode"]=homeStr
         d=json.dumps(data)
-        print(d)
         b=d.encode()
-        print("wtf1")
         s.sendall(b)
     
         c=s.recv(1)
-        print("wtf2")
         j=c.decode()
         print(j)
 	
@@ -178,11 +164,9 @@ def xpos():
         d=json.dumps(data)
         print(d)
         b=d.encode()
-        print("wtf1")
         s.sendall(b)
     
         c=s.recv(128)
-        print("wtf2")
         j=c.decode()
         print(j)
         #Spindle_Position(j)
@@ -204,7 +188,6 @@ def xneg():
         s.sendall(b)
     
         c=s.recv(128)
-        print("wtf2")
         j=c.decode()
         print(j)
 
@@ -225,7 +208,6 @@ def ypos():
         s.sendall(b)
     
         c=s.recv(128)
-        print("wtf2")
         j=c.decode()
         print(j)
 	
@@ -246,7 +228,6 @@ def yneg():
         s.sendall(b)
     
         c=s.recv(128)
-        print("wtf2")
         j=c.decode()
         print(j)
 
@@ -267,7 +248,6 @@ def zpos():
         s.sendall(b)
     
         c=s.recv(128)
-        print("wtf2")
         j=c.decode()
         print(j)
 	
@@ -288,7 +268,6 @@ def zneg():
         s.sendall(b)
     
         c=s.recv(128)
-        print("wtf2")
         j=c.decode()
         print(j)
 	
@@ -306,7 +285,6 @@ def home():
         s.sendall(b)
     
         c=s.recv(128)
-        print("wtf2")
         j=c.decode()
         print(j)
 
@@ -330,7 +308,6 @@ def diag1():
         s.sendall(b)
     
         c=s.recv(128)
-        print("wtf2")
         j=c.decode()
         print(j)
 	
@@ -353,7 +330,6 @@ def diag2():
         s.sendall(b)
     
         c=s.recv(128)
-        print("wtf2")
         j=c.decode()
         print(j)
 	
@@ -376,7 +352,6 @@ def diag3():
         s.sendall(b)
     
         c=s.recv(128)
-        print("wtf2")
         j=c.decode()
         print(j)
 	
@@ -399,7 +374,6 @@ def diag4():
         s.sendall(b)
     
         c=s.recv(128)
-        print("wtf2")
         j=c.decode()
         print(j)
 
@@ -442,12 +416,9 @@ def checkered(canvas, scalex, scaley):
    for y in range(scaley,rectangle_height,scaley):
       w.create_line(25, y+25, rectangle_width+25, y+25, fill="#476042")
 	  
-def getScaleVal():
-    #selection = "Value of X = " + str(var1.get()) + " Value of Y = " + str(var2.get())
-    #label.config(text = selection) 
+def getScaleVal(): 
     scalex=int(var1.get())
     scaley=int(var2.get())
-    #print("scaleX= {0}, scaleY= {1}".format(scalex, scaley))
     checkered(w, scalex, scaley)
 
 xmin,xmax,ymin,ymax, valxprev,valyprev,valxnew,valynew, vali,valj, xMin,xMax,yMin,yMax, flag, valg, scalex, scaley= 0.0,0.0,0.0,0.0, 0.0,0.0,0.0,0.0, 0.0,0.0, 0.0,0.0,0.0,0.0, 0, 0, 5, 5
@@ -513,14 +484,8 @@ def findMinMax(x1, x2, y1, y2, xc, yc,direction):
             tStart = t1
             tEnd = t2
         delta = 0.01
-        '''
-        xMin = xc + radius * cos(tStart)
-        yMin = yc + radius * sin(tStart)
-        xMax = xMin
-        yMax = yMin
-        '''
+
         theta = tStart
-        #tEnd = tEnd + 6.283
 
         while theta <= tEnd:
             # compute coordinates
@@ -543,17 +508,10 @@ def findMinMax(x1, x2, y1, y2, xc, yc,direction):
     # now scan the polar space at fixed radius and find the minimum AND maximum Cartesian x and y values
     # print ("cos of " + str(tStart) + " is : " + str(round(cos(tStart))))
     # initialize min and max coordinates to first point
-
-    # display min and max values
-    #print("xMin = " + str(xMin) + " yMin = " + str(yMin))
-    #print("xMax = " + str(xMax) + " yMax = " + str(yMax))
     return xMin,yMin,xMax, yMax 
-	
-#findMinMax(-1/1.41, 1/1.41, 1/1.41, -1/1.41, 0, 0,0)
 
 SelectedfileFlag, flagRemoveBound =0, 0
 filename=''
-
 
 def UploadAction(event=None):                             # Import File is getting selected and needs to be saved on RaspberryPi
     global SelectedfileFlag
@@ -580,7 +538,6 @@ def BoundingBox(SelectedfileFlag, filename):
                     if(word[0]== "G"):
                         g=word[1]
                         valg=float(g)	
-                        #print(valg)
                         if(valg==2):
                             flag=0
                         elif(valg==3):
@@ -592,7 +549,6 @@ def BoundingBox(SelectedfileFlag, filename):
                             xmax=valxnew
                         if(valxnew<xmin):
                             xmin=valxnew
-                            #print(x)
                     elif(word[0] == "Y"):
                         y=word[1:]
                         valynew=float(y)
@@ -600,28 +556,18 @@ def BoundingBox(SelectedfileFlag, filename):
                             ymax=valynew
                         if(valynew<ymin):
                             ymin=valynew
-                            #print(y)
                     elif(word[0]== "I"):
                         i=word[1:]
                         vali=float(i)
-                        #print(vali)
                     elif(word[0]== "J"):
                         j=word[1:]
                         valj=float(j)
-                        #print(valj)
-			    
-                #print("Vali={0}, Valj={1}\n".format(vali, valj))
-                #print("Valxprev={0}, Valxnew={1}, Valyprev={2}, Valynew={3}, Xcentre={4}, Ycentre={5}, Flag={6}\n".format(valxprev ,valxnew, valyprev, valynew, valxprev+vali, valyprev+valj, flag)) 
+
                 xMin, yMin, xMax, yMax = findMinMax(valxprev,valxnew, valyprev, valynew, valxprev + vali, valyprev + valj, flag)
-                #xMin,yMin,xMax,yMax=findMinMax(valxprev ,valxnew, valyprev, valynew, valxprev + vali, valyprev + valj, flag)
                 valxprev= valxnew
                 valyprev= valynew
                 vali=0
-                valj=0
-#print("xmax={0}, xMax={1} \n".format(xmax, float(xMax)))
-#print("xmin={0}, xMin={1} \n".format(xmin, float(xMin)))
-#print("ymax={0}, yMax={1} \n".format(ymax, float(yMax)))
-#print("ymin={0}, yMin={1} \n".format(ymin, float(yMin)))	
+                valj=0	
 
         if(xmax<xMax):
             xmax=xMax
@@ -631,12 +577,6 @@ def BoundingBox(SelectedfileFlag, filename):
             ymax=yMax
         if(ymin>yMin):
             ymin=yMin
-        #print(xmax)
-        #print(xmin)
-        #print(ymax)
-        #print(ymin)
-    #elif(SelectedfileFlag==0):
-    #   xmax,xmin,ymax,ymin=0.0,0.0,0.0,0.0
     plot()
 
 def play():
@@ -646,7 +586,6 @@ def play():
     for the_file in os.listdir(folder):
         file_path = os.path.join(folder, the_file)
         BoundingBox(SelectedfileFlag, file_path)
-    #t1.cancel()
 
 def clear():
     boundingbox=w.create_rectangle(2,2, rectangle_width+2, rectangle_height+2, fill='white')
@@ -660,17 +599,18 @@ global SetClear
 SetClear=0
 
 def Clear():
-    w.delete("all")
-    #global a,b,c,d
-    #a,b,c,d=0,0,0,0
+    global SetClear
+    movevar.set("0")
     SetClear=1
+    w.delete("all")
     boundingbox=w.create_rectangle(2,2, rectangle_width+2, rectangle_height+2, fill='white')
     w.tag_raise(boundingbox)
 
 prevX, prevY=0,0
 
 def move():
-    global xmax, xmin, ymax, ymin
+    global xmax, xmin, ymax, ymin, SetClear
+    SetClear=0
     if(int(movevar.get())==2):
         t2=threading.Timer(1.0, plot)
         t2.start()
@@ -682,25 +622,20 @@ SpindleX=0
 SpindleY=0
 
 def plot():
-    print("Plot Hua")
     global valuex, valuey,flag1, prevx,prevy, xmax, xmin,ymax,ymin, SetClear,a ,b, c, d
     t=threading.Timer(1.0, move)
     t.start()
-    #clear()
-    a=(valuex/6.0)+2
-    b=408.4-(valuey/6.0)
-    c=float((xmax-xmin+valuex)/6.0+2)
-    d=float(408.4-(ymax-ymin+valuey)/6.0)
+    a=(valuex/7.0)+2
+    b=350.34-(valuey/7.0)
+    c=float((xmax-xmin+valuex)/7.0+2)
+    d=float(350.34-(ymax-ymin+valuey)/7.0)
     print(a, b, c, d)
     
-    #if(SetClear==1):
-    #    a,b,c,d, valuex, valuey, xmin, xmax, ymin, ymax=0,0,0,0, 0, 0, 0, 0, 0, 0
     if(valuex!=prevx or valuey!=prevy):
         flag1=0
 
-    if(a>=2 and b<=408.4 and c<=rectangle_width+2 and d>=2):
+    if(a>=2 and b<=350.34 and c<=rectangle_width+2 and d>=2):
         clear()
-        print("Bounding Box Banega CNC Bed pe")
         if(SetClear==0):
             boundingbox=w.create_rectangle(a, b, c, d, fill = 'red')
             w.tag_raise(boundingbox)
@@ -713,42 +648,49 @@ def plot():
         flag1=1	
     prevx=valuex
     prevy=valuey
-    #t.cancel()
-
+    
+global PauseFlag, PlayCounter
+PauseFlag=0
 initial=0
+PlayCounter=0
 switch=True
 def PlayFile(): 
     initial=time.time()
     def runn():
-        global running, initial
+        global running, initial, PauseFlag, PlayCounter
         global s
         global folder, file
-        for file in os.listdir(folder):
-            file_path = os.path.join(folder, file)
-        data = open(file_path,"r")
-        d = data.readlines()
-        p=""
+        if(PlayCounter==0):
+            for file in os.listdir(folder):
+                file_path = os.path.join(folder, file)
+            data = open(file_path,"r")
+            d = data.readlines()
+            p=""
+            i=0
+            j=0
+            dic ={}
+            totalCount=0
+            passk='F'
+            passkey=passk.encode()
+            s.sendall(passkey)
+
+            while i<len(d):
+                p=p+d[i]
+                count= utf8len(d[i])
+                totalCount=totalCount+count
+                if (totalCount>10 or i==len(d)-1):
+                    q={j:p}
+                    p=""
+                    dic.update(q)
+                    totalCount=0
+                    j+=1
+                i+=1
+            print(dic, i)
         i=0
-        j=0
-        dic ={}
-        totalCount=0
-        passk='F'
-        passkey=passk.encode()
-        
-        s.sendall(passkey)
-        while i<len(d):
-            p=p+d[i]
-            count= utf8len(d[i])
-            totalCount=totalCount+count
-            if (totalCount>10 or i==len(d)-1):
-                q={j:p}
-                p=""
-                dic.update(q)
-                totalCount=0
-                j+=1
-            i+=1
-        i=0
-		
+        PlayCounter=1
+        playbutton.configure(bg = "green")
+        pausebutton.configure(bg = "white")
+        stopbutton.configure(bg = "white")
         while(i<len(dic)):
             print(running)
             if(running == False):  
@@ -758,9 +700,13 @@ def PlayFile():
             s.send(b)
             c=s.recv(1)
             j=c.decode()
-            print(j)
+            print(j, a)
             flag=1;
-            if(j=='Y'):
+            if(PauseFlag==1 or j=='P'):
+                PauseFlag=1
+                print("PauseFlag", PauseFlag, j)
+                continue
+            elif(j=='Y'):
                 i=i+1
                 j=""
             elif(j=='N'):
@@ -777,12 +723,18 @@ def PlayFile():
         l='@'
         m=l.encode()
         s.sendall(m)
+        PlayCounter=0
+        PauseFlag=0
+        stopbutton.configure(bg = "red")
+        pausebutton.configure(bg = "white")
+        playbutton.configure(bg = "white")
         data.close() 
     thread = threading.Thread(target=runn)  
     thread.start()  	
 
 def Play():
-    global running
+    global running, PauseFlag
+    PauseFlag=0
     running = True
     PlayFile()
 
@@ -790,8 +742,18 @@ def Stop():
     global running, initial
     running = False
     final=time.time()
+    stopbutton.configure(bg = "red")
+    pausebutton.configure(bg = "white")
+    playbutton.configure(bg = "white")
     print("Time:"+(final-initial))
 
+def Pause():
+    global PauseFlag
+    PauseFlag=1
+    pausebutton.configure(bg = "orange")
+    playbutton.configure(bg = "White")
+    stopbutton.configure(bg = "White")
+    
 def GRBL_Settings():
     '''
     STEPS="$100="+XSteps.get()+"\n" + "$101="+YSteps.get()+"\n" + "$102="+YSteps.get()+"\n"
@@ -828,14 +790,16 @@ def Spindle_Display():
     global SpindleX, SpindleY, valuex, valuey, delete, a, b, c, d
     t=threading.Timer(0.1, move)
     t.start()
-    Clear()
+    w.delete("all")
+    clear()
     print("valuex, valuey, a ,b, c, d", valuex, valuey, a,b,c,d)
     boundingbox=w.create_rectangle(a, b, c, d, fill = 'red')
     w.tag_raise(boundingbox)
-    spindle=w.create_oval((valuex-30)/6.0, 408.4-(valuey-30)/6.0, (valuex+30)/6.0, 408.4- (valuey+30)/6.0, fill="green")
+    spindle=w.create_oval((valuex-30)/7.0, 350.34-(valuey-30)/7.0, (valuex+30)/7.0, 350.34- (valuey+30)/7.0, fill="green")
     w.tag_raise(spindle)
-
-
+    if(SetClear==1):
+        w.delete('all')
+        clear()
 
 def SET_X_STEPS():
     v10.set("100")
@@ -895,7 +859,6 @@ GRBL_value=[]
 
 def Refresh():
     counter=0
-    #for counter in range(2):
     c='G'
     e=c.encode()
     s.sendall(e)
@@ -908,18 +871,15 @@ def Refresh():
     
     c1=s.recv(1024)
     L1=c1.decode()
-    print("--------------------")
     L=(re.split('\n', L1))
     if 'Y' in L:
         L.remove('Y')
-    #print("String From Arduino")
     print("L1", L1)
     print(L)
     GRBL_code=[]
     GRBL_value=[]
 
     for x in L:
-    #print(counter, x)
         if(x.startswith('$')):
             x1=x.find(" ")
             #b=x[0:x1]
@@ -928,14 +888,9 @@ def Refresh():
             GRBL_code.append(head)
             GRBL_value.append(tail)
     x=0
-    #print("Now Breaking")
     print(GRBL_code, GRBL_value)
-    #print("Fetching")
     x=GRBL_code.index("$100")
-    #print("Index=", x)
-    print("----------------------")
     y=GRBL_value[x]
-    #print("100=", y)
     v1.set(y)
     y=GRBL_value[x+1]
     v2.set(y)
@@ -971,31 +926,22 @@ window=ttk.Frame(noteb)
 noteb.add(window, text='Home')
 window2=ttk.Frame(noteb)
 noteb.add(window2, text='Settings')
-#main.configure(background="yellow")
 
 ############### Frames ##################
 
 frame0=Frame(window)
-#frame0.grid(row=0, column=0, padx=(60,140))
 frame0.grid(row=0, column=0, sticky='N')
 
 frame1=Frame(window)
-#frame1.grid(row=1, column=0, padx=(0,125))
 frame1.grid(row=1, column=0, sticky='N')
 
-#frame2=Frame(window)
-#frame2.grid(row=2, column=0, padx=(25,165), pady=5, sticky='w')
-
 frame3=Frame(window)
-#frame3.grid(row=2, column=0, padx=(0,110))
 frame3.grid(row=2, column=0, sticky='N')
 
 frame4=Frame(window)
-#frame4.grid(row=3, column=0, padx=(0, 55))
 frame4.grid(row=3, column=0)
 
 frame5=Frame(window)
-#frame5.grid(row=4, column=0, padx=(20,90), pady=(20,0))
 frame5.grid(row=4, column=0)
 
 frame6=Frame(window2)
@@ -1012,18 +958,14 @@ frame8.grid(row=2, column=0)
 currentX=Label(frame1, height='1', width='20')
 currentX.grid(row=2, column=0)
 
-zlabel=Label(frame3, text="Z", height='2', width='2')
-#zlabel.grid(row=0, column=0, sticky=W+E+N+S, padx=70)
-#zlabel.grid(row=0, column=0, padx=(60,80))
+zlabel=Label(frame3, text="Z", height='1', width='2')
 zlabel.grid(row=0, column=0)
 
-ylabel=Label(frame3, text="Y")
-#ylabel.grid(row=0, column=4)
+ylabel=Label(frame3, text="Y", height='1', width='2')
 ylabel.grid(row=0, column=3)
 
 xlabel=Label(frame3, text="X", height='2', width='2')
 xlabel.grid(row=2, column=1)
-#xlabel.pack(padx=20, side=LEFT)
 
 setXSteps=Label(frame6, text="$100", height='1', width='4')
 setXSteps.grid(row=0, column=0, sticky='W')
@@ -1097,9 +1039,6 @@ v9=StringVar(frame8, value="10.00")
 ZAcceleration=Entry(frame6, width='7', textvariable=v9)
 ZAcceleration.grid(row=8, column=2, columnspan=2)
 
-#CommandLine=Text(frame6, height=1, width=20)
-#CommandLine.grid(row=9, column=0)
-
 slabel=Label(frame7, text="$", height='1', width='1')
 slabel.grid(row=1, column=0, sticky='W')
 v10=StringVar(frame7, value='0')
@@ -1149,10 +1088,10 @@ SetHomebutton.grid(row=0, column=3, padx=(0, 2))
 clearbutton=Button(frame0, text="Clear", height='2', width='8', command = Clear)
 clearbutton.grid(row=0, column=4)
 
-ipaddress = Label(frame1, height=2, width=25)
+ipaddress = Label(frame1, height=1, width=25)
 ipaddress.grid(row=0, column=0, sticky="e")
 
-newfilename = Label(frame1, height=2, width=20)
+newfilename = Label(frame1, height=1, width=20)
 newfilename.grid(row=1, column=0)
 
 zpbutton=Button(frame3, text="+", height='2', width='2', command=zpos)
@@ -1207,20 +1146,12 @@ subbutton.grid(row=3, column=6)
 var1 = IntVar()
 scaleXBox = Scale(frame6, orient='horizontal', from_=0, to=20, variable = var1, tickinterval=5)
 scaleXBox.grid(row=5, column=0, padx=(0,5))
-
 var2 = IntVar()
 scaleYBox = Scale(frame6, orient='vertical', from_=0, to=20, variable = var2, tickinterval=5)
 scaleYBox.grid(row=5, column=1)
-
 button = Button(frame7, text="Get Scale Value", command=getScaleVal)
 button.grid(row=6, column=2)
-
 '''
-
-def sel():
-   #selection = "Move " + str(movevar.get())
-   #label.config(text = selection)
-    global valuex, valuey
 
 movevar = IntVar()
 moveCNC = Radiobutton(frame5, text="Move CNC", variable=movevar, value=1, command=move)
@@ -1244,7 +1175,7 @@ importbutton.grid(row=0, column=0, padx=(0,5))
 playbutton=Button(frame4, text="|>", height='2', width='3', command=Play)
 playbutton.grid(row=0, column=1, padx=(0,5))
 
-pausebutton=Button(frame4, text="||", height='2', width='3')
+pausebutton=Button(frame4, text="||", height='2', width='3', command=Pause)
 pausebutton.grid(row=0, column=2, padx=(0,10))
 
 stopbutton=Button(frame4, text="[]", height='2', width='3', command=Stop)
@@ -1252,7 +1183,7 @@ stopbutton.grid(row=0, column=3)
 
 ############## CANVAS BEDSHEET ##################
 
-w = Canvas(window, width=205, height=410)
+w = Canvas(window, width=175.2, height=350.4)
 w.grid(row=0, column=4, rowspan=5)
 
 bedarea=w.create_rectangle(2, 2, rectangle_width+2, rectangle_height+2)
@@ -1264,11 +1195,9 @@ w.tag_raise(spindle)
 #print("h",scale1)
 #checkered(w, 5)
 
-#print(xmax, xmin, ymax, ymin)
-
 ############### Debugger Box ####################
 
-debugSec=Text(window, width=25, height=25, fg="red")
+debugSec=Text(window, width=25, height=20, fg="red")
 debugSec.insert(1.0, "Debugger>>\n")
 debugSec.grid(row=0, column=5, rowspan=5, sticky='N')
 
