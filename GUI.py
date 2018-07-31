@@ -7,12 +7,12 @@ import math, os, shutil, time
 from numpy import *
 import re
 global value
-global i, xmin,xmax,ymin,ymax, valxprev,valyprev,valxnew,valynew, vali,valj, xMin,xMax,yMin,yMax, flag, valg, scalex, scaley, SelectedfileFlag, flagRemoveBound,a, b, c, d
-#rectangle_width = 203.2
-#rectangle_height = 406.4
+global i, xmin,xmax,ymin,ymax, valxprev,valyprev,valxnew,valynew, vali,valj, xMin,xMax,yMin,yMax, flag, valg, scalex, scaley, SelectedfileFlag, a, b, c, d
+a,b,c,d=0,0,0,0
 rectangle_width = 174.17
 rectangle_height = 348.34
 valuex, valuey, valuez=0,0,0
+SelectedfileFlag=0
 newest=''
 to_exclude = ['select']
 
@@ -32,8 +32,8 @@ data = None
 #folder="/home/pi/Desktop/Orangewood_gerber"
 folder="C:\\Users\\Ankit Kumar\\Desktop\\Deskto"
 
-s = socket(AF_INET, SOCK_STREAM)
-s1 = socket(AF_INET, SOCK_DGRAM)
+s = socket(AF_INET, SOCK_STREAM)             # TCP Socket
+s1 = socket(AF_INET, SOCK_DGRAM)             # UDP Socket
 print(s, type(s))
 print("Socket made")
 timeout = 3 # timeout in seconds
@@ -57,9 +57,9 @@ def hashing(var):
 def colorChange():
     """Changes the button's color"""
     global SelectedfileFlag
-    clean()
+    clean()                                  # Cleans Target Folder
     global s1
-    HOST = '0.0.0.0'
+    HOST = '0.0.0.0'                         # Listens from Devices on Network
     # Listen on Port
     PORT = 44444
     #Size of receive buffer
@@ -68,84 +68,80 @@ def colorChange():
     s1.bind((HOST, PORT))
     data = s1.recvfrom(BUFFER_SIZE)
     Host=data[1]
-    host=Host[0]
+    host=Host[0]                             # ESP's IP Address
 # Close connection
     print(data[0], host)
     print("Closing Socket")
-    s1.close()
+    s1.close()                               # Closes UDP Socket
     global s
     print("Connecting to " + host)
     port = 80
     s.connect((host,port))
     print("Connection made")
     ip_address=s.getsockname()[0]
-    ipaddress.config(text="IP Address: "+ ip_address)   
+    ipaddress.config(text="IP Address: "+ ip_address)   # Host's Ip Address
     print (ip_address)
-    z1='Q'
-    req=z1.encode()
+    z1='Q'                       
+    req=z1.encode()                          # Sends 'Q' to ESP
     s.sendall(req)
-    e=s.recv(1)
+    e=s.recv(1)                              # Receives 'P' in return
     h=e.decode()
     print(h)
-    Connectbutton.configure(bg = "red")
+    Connectbutton.configure(bg = "red")      
     stopbutton.configure(bg = "white")
     pausebutton.configure(bg = "white")
     playbutton.configure(bg = "white")
-    #os.system('./shell.sh')
-    #print("Server Executed ")
-
     SelectedfileFlag=1
-    rem()
+    rem()                                    # Makes Sure that not more that 1 file(Latest File) is in Target folder 
 
 def clean():
     global folder
-    for the_file in os.listdir(folder):
-        file_path = os.path.join(folder, the_file)
+    for the_file in os.listdir(folder):      # Iteration on files present in Target Folder begins here.
+        file_path = os.path.join(folder, the_file)     # Joins folder path and file name to obtain file path
         try:
             if os.path.isfile(file_path):
-                os.unlink(file_path)
-        except Exception as e:
-            print(e)
+                os.unlink(file_path)         # Removes file from the folder iteratively.
+        except Exception as e:               
+            print(e)                         # Prints Exception
     	
 def rem():
-    t=threading.Timer(1.0, rem)
-    t.start()
-    global SelectedfileFlag
-    global folder
-    os.chdir(folder)
+    t=threading.Timer(1.0, rem)              # Timer of Specified time 
+    t.start()                                # Timer Starts
+    global SelectedfileFlag, folder
+    os.chdir(folder)                         # Changes working directory to Target Folder
     files=[]
-    files = sorted(os.listdir(os.getcwd()), key=os.path.getmtime)
+    files = sorted(os.listdir(os.getcwd()), key=os.path.getmtime)	# Sorts File Present, Newest File lies at the End in the Target Folder
     if(len(files)>0):
-        newest = files[-1]
-        oldest = files[0:len(files)-1]
-        for i in oldest:
-            file_path=os.path.join(folder, i)
-            print(file_path)
-            os.unlink(file_path)
-        newfilename.config(text="File Name: "+newest)
-        if(SelectedfileFlag==1):
-           play()
-           SelectedfileFlag=0
+        newest = files[-1]                                  # Newest File
+        oldest = files[0:len(files)-1]                      # Oldest Files
+        for i in oldest:                                    # Iterates on Oldest Files
+            file_path=os.path.join(folder, i)               # Gets file_path by joining Folder and file name            
+            os.unlink(file_path)                            # Unlinks File
+        newfilename.config(text="File Name: "+newest)       # Displays Newest File Name present in the Folder ON GUI
+        #SelectedfileFlag=1
+        if(SelectedfileFlag==1):                          
+           play()                                           # If File is found, Plots Gcode on GUI
+           #SelectedfileFlag=0
     else:
-        newfilename.config(text="Load File")
+        newfilename.config(text="Load File")                # If File is Not Found, displays text on GUI
 
 def sethome():
     global valuex, valuey, valuez, s
     valuex, valuey, valuez=0,0,0
     selection = "X = " + str(valuex) + " Y = " + str(valuey) + " Z = " + str(valuez)
-    currentX.config(text = selection)
-    if(int(movevar.get())==1):
-        c='G'
+    currentX.config(text = selection)                       # Displays Coordinates on GUI
+    if(int(movevar.get())==1):                              # If MoveCNC is enabled
+        c='G'                                               # Sends 'G'                   
         e=c.encode()
         s.sendall(e)
-        homeStr="G10L20P1X0Y0Z0\n$G\n$#\n"
-        data={}
-        data["GCode"]=homeStr
-        d=json.dumps(data)
-        b=d.encode()
-        s.sendall(b)
+        homeStr="G10L20P1X0Y0Z0\n$G\n$#\n"                 
+        data={}                                             # Creates Empty Dictionary
+        data["GCode"]=homeStr                               # Associates Value 'homeStr' with Key 'GCode'
+        d=json.dumps(data)                                  # Dumps String in JSON Format
+        b=d.encode()                                        
+        s.sendall(b)                                        # Sends String 'homeStr', this Should Make MPOS X,Y,Z=0,0,0
     
-        c=s.recv(1)
+        c=s.recv(1)                                         # Receives
         j=c.decode()
         print(j)
 	
@@ -288,6 +284,24 @@ def home():
         j=c.decode()
         print(j)
 
+def unlock():
+    print("Moving to Home")
+    global valuex, valuey, s
+    if(int(movevar.get())==1):
+        #homeStr="G90G0X"+str(valuex)+"Y"+str(valuey)+"\nG90\n"
+        homeStr="$X"
+
+        data={}
+        data["GCode"]=homeStr
+        d=json.dumps(data)
+        b=d.encode()
+        s.sendall(b)
+    
+        c=s.recv(128)
+        j=c.decode()
+        print(j)
+
+
 def diag1():
     #print("Moving diagonally 1")
     value = entrybox.get()
@@ -378,10 +392,10 @@ def diag4():
         print(j)
 
 def increment():
-	value=int(entrybox.get())
-	value=value+1
-	entrybox.delete(0, 'end')
-	entrybox.insert(0, value)
+	value=int(entrybox.get())                    # Gets Entry Box Value in 'Home' Tab
+	value=value+1                                # Increment 1 to Current Value in Entry Box
+	entrybox.delete(0, 'end')                    # Deletes Previous Entry 
+	entrybox.insert(0, value)                    # Inserts Updated Entry
 	
 def decrement():
 	value=int(entrybox.get())
@@ -450,7 +464,7 @@ def findMinMax(x1, x2, y1, y2, xc, yc,direction):
             tStart = t2
             tEnd = t1
 
-        delta = 0.01
+        delta = 0.01                          # increment Step
         '''
         xMin = xc + radius * cos(tStart)
         yMin = yc + radius * sin(tStart)
@@ -499,7 +513,6 @@ def findMinMax(x1, x2, y1, y2, xc, yc,direction):
             if (y > yMax):
                 yMax = y
             if (y < yMin):
-                #print("yMin has now been changed at X: " + str(x) + " Y: " + str(y))
                 yMin = y
 
             theta = theta + delta
@@ -510,18 +523,18 @@ def findMinMax(x1, x2, y1, y2, xc, yc,direction):
     # initialize min and max coordinates to first point
     return xMin,yMin,xMax, yMax 
 
-SelectedfileFlag, flagRemoveBound =0, 0
+
 filename=''
 
-def UploadAction(event=None):                             # Import File is getting selected and needs to be saved on RaspberryPi
-    global SelectedfileFlag
+def UploadAction(event=None):                            # USB Option of Uploading File
+    global SelectedfileFlag, folder 
+    print("SelectedFileFlag", SelectedfileFlag)	
     if(SelectedfileFlag==1):
-        filename = filedialog.askopenfilename()
-        global folder
-        folder, file = os.path.split(filename)
-        print(folder, file)
-        BoundingBox(SelectedfileFlag, filename)
-    print('Selected:', filename)
+        filename = filedialog.askopenfilename()          # Gets File Location
+        print("UploadAction:", filename)
+        folder, file = os.path.split(filename)           # Splits it into Folder and File                          
+        BoundingBox(SelectedfileFlag, filename)          # Creates Bounding Box
+    print('Selected:', filename, folder, file)
 
 def BoundingBox(SelectedfileFlag, filename):
     global xmin,xmax,ymin,ymax,valuex, valuey
@@ -532,10 +545,10 @@ def BoundingBox(SelectedfileFlag, filename):
     j=''
     g=''
     if(SelectedfileFlag==1):
-        with open(filename,'r') as f:
-            for line in f.readlines():
-                for word in line.split():
-                    if(word[0]== "G"):
+        with open(filename,'r') as f:               # Opens File 
+            for line in f.readlines():              # Reads Line
+                for word in line.split():           # Splits line in to words
+                    if(word[0]== "G"):              # Parsing Begins
                         g=word[1]
                         valg=float(g)	
                         if(valg==2):
@@ -568,8 +581,8 @@ def BoundingBox(SelectedfileFlag, filename):
                 valyprev= valynew
                 vali=0
                 valj=0	
-
-        if(xmax<xMax):
+        # minimum and maximum values from findMinMax and BoundingBox are compared 
+        if(xmax<xMax):                 
             xmax=xMax
         if(xmin>xMin):
             xmin= xMin
@@ -577,19 +590,19 @@ def BoundingBox(SelectedfileFlag, filename):
             ymax=yMax
         if(ymin>yMin):
             ymin=yMin
-    plot()
+    plot()             # Bounding Box is being plotted as per final values of xmax, xmin, ymax, ymin
 
 def play():
-    
-    SelectedfileFlag=1
+    global SelectedfileFlag
+    #SelectedfileFlag=1
     global folder
     for the_file in os.listdir(folder):
-        file_path = os.path.join(folder, the_file)
-        BoundingBox(SelectedfileFlag, file_path)
+        file_path = os.path.join(folder, the_file)         
+        BoundingBox(SelectedfileFlag, file_path)              # Plots Bounding Box
 
 def clear():
     boundingbox=w.create_rectangle(2,2, rectangle_width+2, rectangle_height+2, fill='white')
-    w.tag_raise(boundingbox)
+    w.tag_raise(boundingbox)            # 'boundingbox' is placed highest on STACK
 
 flag=0
 prevx=0
@@ -600,7 +613,7 @@ SetClear=0
 
 def Clear():
     global SetClear
-    movevar.set("0")
+    movevar.set("0")                    # Clear all Radio Buttons
     SetClear=1
     w.delete("all")
     boundingbox=w.create_rectangle(2,2, rectangle_width+2, rectangle_height+2, fill='white')
@@ -625,22 +638,22 @@ def plot():
     global valuex, valuey,flag1, prevx,prevy, xmax, xmin,ymax,ymin, SetClear,a ,b, c, d
     t=threading.Timer(1.0, move)
     t.start()
+    # (a,b) makes lower left coordinate of Bounding Box, c and d makes length and breadth of Bounding Box based on values of xmin, xmax, ymin, ymax, valuex, valuey
     a=(valuex/7.0)+2
     b=350.34-(valuey/7.0)
     c=float((xmax-xmin+valuex)/7.0+2)
     d=float(350.34-(ymax-ymin+valuey)/7.0)
-    print(a, b, c, d)
     
     if(valuex!=prevx or valuey!=prevy):
         flag1=0
 
-    if(a>=2 and b<=350.34 and c<=rectangle_width+2 and d>=2):
+    if(a>=2 and b<=350.34 and c<=rectangle_width+2 and d>=2):                  # Condition for retaining Bounding Box within Canvas Boundary
         clear()
         if(SetClear==0):
             boundingbox=w.create_rectangle(a, b, c, d, fill = 'red')
             w.tag_raise(boundingbox)
             flag1=0
-    elif(flag1==0):
+    elif(flag1==0):                                                            # If Condition isn't met then error is being shown
         top = Toplevel()
         top.title('Error')
         Message(top, text="Crossed CNC Bed").grid(row=0, column=1)
@@ -657,10 +670,9 @@ switch=True
 def PlayFile(): 
     initial=time.time()
     def runn():
-        global running, initial, PauseFlag, PlayCounter
-        global s
-        global folder, file
-        if(PlayCounter==0):
+        global running, initial, PauseFlag, PlayCounter, s, folder, file
+        if(PlayCounter==0):  		# First time File is played
+            print("PLAYFILE", folder, file)
             for file in os.listdir(folder):
                 file_path = os.path.join(folder, file)
             data = open(file_path,"r")
@@ -676,9 +688,9 @@ def PlayFile():
 
             while i<len(d):
                 p=p+d[i]
-                count= utf8len(d[i])
+                count= utf8len(d[i])                                     
                 totalCount=totalCount+count
-                if (totalCount>10 or i==len(d)-1):
+                if (totalCount>10 or i==len(d)-1):                         # create blocks of Gcode to be Processed
                     q={j:p}
                     p=""
                     dic.update(q)
@@ -693,23 +705,21 @@ def PlayFile():
         stopbutton.configure(bg = "white")
         while(i<len(dic)):
             print(running)
-            if(running == False):  
+            if(running == False):                                                       # when STOP button is Pressed
                 break 
-            a=json.dumps({"index":i, "GCode":dic[i], "Hash_value":hashing(dic[i])})
+            a=json.dumps({"index":i, "GCode":dic[i], "Hash_value":hashing(dic[i])})     # Dumps Gcode in JSON Format
             b=a.encode()
             s.send(b)
             c=s.recv(1)
             j=c.decode()
-            print(j, a)
             flag=1;
-            if(PauseFlag==1 or j=='P'):
+            if(PauseFlag==1 or j=='P'):                                                 # Pauses file when Pause button is clicked or 'P' is being received from ESP on Power Cut
                 PauseFlag=1
-                print("PauseFlag", PauseFlag, j)
                 continue
-            elif(j=='Y'):
+            elif(j=='Y'):                                                               # Sends Next Block
                 i=i+1
                 j=""
-            elif(j=='N'):
+            elif(j=='N'):                                                               # Doesn't send Next Block until 'Y' is being received
                 while(j=='N'):
                     b=a.encode()
                     s.send(b)
@@ -720,7 +730,7 @@ def PlayFile():
                         j=""
             else:
                 break
-        l='@'
+        l='@'                                                                           # Stops File Processing
         m=l.encode()
         s.sendall(m)
         PlayCounter=0
@@ -734,8 +744,8 @@ def PlayFile():
 
 def Play():
     global running, PauseFlag
-    PauseFlag=0
-    running = True
+    PauseFlag=0                                          # Disables Pause FLag
+    running = True                                       # Make Gcode Blocks running
     PlayFile()
 
 def Stop():
@@ -749,7 +759,7 @@ def Stop():
 
 def Pause():
     global PauseFlag
-    PauseFlag=1
+    PauseFlag=1                                          # Enables PauseFlag
     pausebutton.configure(bg = "orange")
     playbutton.configure(bg = "White")
     stopbutton.configure(bg = "White")
@@ -764,7 +774,7 @@ def GRBL_Settings():
     c='G'
     e=c.encode()
     s.sendall(e)
-    homeStr="$"+str(getGRBL.get())+"="+str(valueGRBL.get())
+    homeStr="$"+str(getGRBL.get())+"="+str(valueGRBL.get())                 # Creates string of format "$100=100" to be sent to ESP
     print(homeStr)
     data={}
     data["GCode"]=homeStr
@@ -772,9 +782,9 @@ def GRBL_Settings():
     b=d.encode()
     s.sendall(b)
     
-    #c=s.recv(1)
-    #j=c.decode()
-    #print(j)
+    c=s.recv(128)
+    j=c.decode()
+    print(j)
 
 def Spindle_Position(text): 
     global SpindleX, SpindleY
@@ -782,7 +792,7 @@ def Spindle_Position(text):
     b=text[x1+5:]
 
     data=b.split(",")
-
+    # Spindle Position of X, Y based on MPOS String
     SpindleX=data[0]
     SpindleY=data[1]
 delete=0
@@ -792,10 +802,9 @@ def Spindle_Display():
     t.start()
     w.delete("all")
     clear()
-    print("valuex, valuey, a ,b, c, d", valuex, valuey, a,b,c,d)
     boundingbox=w.create_rectangle(a, b, c, d, fill = 'red')
     w.tag_raise(boundingbox)
-    spindle=w.create_oval((valuex-30)/7.0, 350.34-(valuey-30)/7.0, (valuex+30)/7.0, 350.34- (valuey+30)/7.0, fill="green")
+    spindle=w.create_oval((valuex-30)/7.0, 350.34-(valuey-30)/7.0, (valuex+30)/7.0, 350.34- (valuey+30)/7.0, fill="green")    # use SpindleX and SpindleY to display Spindle Position
     w.tag_raise(spindle)
     if(SetClear==1):
         w.delete('all')
@@ -828,18 +837,6 @@ def SET_Y_ACCELERATION():
 def SET_Z_ACCELERATION():
     v10.set("122")
 
-def incrementEntry():
-    value=int(changeamountGRBL.get())
-    value=value+1
-    changeamountGRBL.delete(0, 'end')
-    changeamountGRBL.insert(0, value)
-
-def decrementEntry():
-    value=int(changeamountGRBL.get())
-    value=value-1
-    changeamountGRBL.delete(0, 'end')
-    changeamountGRBL.insert(0, value)
-
 def incrementGRBL():
     value1=int(variable.get())
     value2=int(valueGRBL.get())
@@ -862,14 +859,14 @@ def Refresh():
     c='G'
     e=c.encode()
     s.sendall(e)
-    homeStr="$$"
+    homeStr="$$"                                               
     data={}
     data["GCode"]=homeStr
     d=json.dumps(data)
     b=d.encode()
     s.sendall(b)
     
-    c1=s.recv(1024)
+    c1=s.recv(1024)                                            # Receives GRBL Settings
     L1=c1.decode()
     L=(re.split('\n', L1))
     if 'Y' in L:
@@ -880,11 +877,11 @@ def Refresh():
     GRBL_value=[]
 
     for x in L:
-        if(x.startswith('$')):
+        if(x.startswith('$')):                                 # Parses String Received from ESP
             x1=x.find(" ")
             #b=x[0:x1]
             #print(b)
-            head, sep, tail=x.partition('=')
+            head, sep, tail=x.partition('=')                   # Seperates it into head, tail w.r.t partition symbol
             GRBL_code.append(head)
             GRBL_value.append(tail)
     x=0
@@ -917,10 +914,10 @@ def Refresh():
 	  
 ########## CNC Control Window ###########
 	
-main=Tk()
-main.title("CNC Control Box")
+main=Tk()                                                        # Main Window
+main.title("CNC Control Box")                                    # Title of the Main Window
 main.geometry('{}x{}'.format(500, 300))
-noteb = ttk.Notebook(main)
+noteb = ttk.Notebook(main)                                       # Tabs Creation
 noteb.grid(row=1, column=0, columnspan='50', rowspan='49')
 window=ttk.Frame(noteb)
 noteb.add(window, text='Home')
@@ -951,7 +948,7 @@ frame7=Frame(window2)
 frame7.grid(row=1, column=0, sticky='W', pady=20)
 
 frame8=Frame(window2)
-frame8.grid(row=2, column=0)
+frame8.grid(row=2, column=0, sticky='W')
 
 ############### Labels ##################
 
@@ -1069,6 +1066,12 @@ addvalueGRBL.grid(row=0, column=3)
 subvalueGRBL=Button(frame7, text="-", height='1', width='1', command= decrementGRBL)
 subvalueGRBL.grid(row=2, column=3)
 
+UnlockGRBL=Button(frame8, text="Unlock", height='1', width='7', command= unlock)
+UnlockGRBL.grid(row=0, column=3)
+
+homeGRBL=Button(frame8, text="Home", height='1', width='7', command= home)
+homeGRBL.grid(row=0, column=4)
+
 #scalelabel=Label(frame6, text="SCALE:", height='2', width='8')
 #scalelabel.grid(row=5, column=0)
 
@@ -1115,7 +1118,7 @@ addbutton.grid(row=1, column=6)
 xnbutton= Button(frame3, text="-", height='2', width='2', command=xneg)
 xnbutton.grid(row=2, column=2, padx=(0,5))
 
-homebutton= Button(frame3, text="O", height='2', width='2', command=home)
+homebutton= Button(frame3, text="O", height='2', width='2')
 homebutton.grid(row=2, column=3)
 
 xpbutton= Button(frame3, text="+", height='2', width='2', command=xpos)
